@@ -1,0 +1,9 @@
+13:09:07 monitor start
+13:09:07 COM6 open ok
+13:09:07 [AP] stations=1
+13:09:07 [AP] station connected mac=C0:35:32:03:7D:79 aid=1
+13:09:07 [AP] station got ip=192.168.4.2
+13:09:21 [HTTP] /control cmd=speed
+13:09:21 [HTTP] /control cmd=car
+13:09:22 [HTTP] /control cmd=car
+13:11:07 COM6 closed

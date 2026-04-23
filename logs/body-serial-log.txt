@@ -1,0 +1,2 @@
+13:34:09 monitor start
+13:34:09 COM5 open ok
