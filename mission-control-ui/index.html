@@ -311,11 +311,41 @@
         box-shadow: 0 0 12px rgba(249, 215, 3, 0.8);
       }
 
+      .mission-clock {
+        min-width: 0;
+        align-self: flex-end;
+        padding-right: 2px;
+      }
+
+      .topbar-actions {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 10px;
+        flex: 0 0 auto;
+      }
+
       .camera-actions {
         display: flex;
         flex-wrap: wrap;
         justify-content: flex-end;
         gap: 8px;
+      }
+
+      .mission-clock-value {
+        display: block;
+        color: rgba(255, 247, 208, 0.94);
+        font-size: 0.82rem;
+        line-height: 1.1;
+        text-align: right;
+        font-family: var(--font-mono);
+        font-variant-numeric: tabular-nums;
+        letter-spacing: 0.06em;
+        white-space: nowrap;
+      }
+
+      .topbar-actions {
+        min-width: 0;
       }
 
       .main-grid {
@@ -1250,6 +1280,21 @@
           justify-content: flex-start;
         }
 
+        .topbar-actions {
+          width: 100%;
+          align-items: flex-start;
+        }
+
+        .mission-clock {
+          align-self: flex-start;
+          padding-right: 0;
+          padding-left: 2px;
+        }
+
+        .mission-clock-value {
+          text-align: left;
+        }
+
         .main-grid {
           grid-template-columns: 1fr;
         }
@@ -1312,19 +1357,25 @@
             <div class="status-pill" id="statusPill">Enlace listo</div>
           </div>
         </div>
-        <div class="camera-actions">
-          <button class="camera-button is-active" id="streamToggleButton" data-camera="stream" type="button">
-            Stream <b class="pad-badge">LT</b> + <b class="pad-badge">X</b>
-            <span>live feed</span>
-          </button>
-          <button class="camera-button" id="photoButton" type="button">
-            Foto <b class="pad-badge">RT</b>
-            <span>snapshot</span>
-          </button>
-          <button class="camera-button" id="torchToggle" type="button">
-            Luz <b class="pad-badge">Y</b>
-            <span>frontal</span>
-          </button>
+        <div class="topbar-actions">
+          <div class="camera-actions">
+            <button class="camera-button is-active" id="streamToggleButton" data-camera="stream" type="button">
+              Stream <b class="pad-badge">LT</b> + <b class="pad-badge">X</b>
+              <span>live feed</span>
+            </button>
+            <button class="camera-button" id="photoButton" type="button">
+              Foto <b class="pad-badge">RT</b>
+              <span>snapshot</span>
+            </button>
+            <button class="camera-button" id="torchToggle" type="button">
+              Luz <b class="pad-badge">Y</b>
+              <span>frontal</span>
+            </button>
+          </div>
+          <div class="mission-clock" aria-label="Fecha y hora local">
+            <span class="mission-clock-value" id="missionClockValue">LOCAL: -- --- ---- · --:--:--</span>
+            <span class="mission-clock-value" id="missionClockUtcValue">UTC: -- --- ---- · --:--:--</span>
+          </div>
         </div>
       </header>
 
@@ -1545,6 +1596,8 @@
       const placeholderTitle = cameraPlaceholder.querySelector('h3');
       const placeholderText = cameraPlaceholder.querySelector('p');
       const statusPill = document.getElementById('statusPill');
+      const missionClockValue = document.getElementById('missionClockValue');
+      const missionClockUtcValue = document.getElementById('missionClockUtcValue');
       const starfield = document.getElementById('starfield');
       const feedBadge = document.getElementById('feedBadge');
       const visionPanel = document.querySelector('.vision-panel');
@@ -1599,6 +1652,7 @@
       let hornActive = false;
       let melodyActive = false;
       let starfieldTwinkleTimer = null;
+      let missionClockTimer = null;
       let spaceDriftTimer = null;
       let lastSpaceDriftAt = 0;
       let spaceBackgroundOffsetX = 0;
@@ -1619,6 +1673,8 @@
       const STREAM_STALL_MS = 5600 * STREAM_COPY_DURATION_MULTIPLIER;
       const STREAM_FALLBACK_MS = 3500 * STREAM_COPY_DURATION_MULTIPLIER;
       const PLACEHOLDER_SWAP_MS = 150;
+      const MISSION_CLOCK_FPS = 1;
+      const MISSION_CLOCK_INTERVAL_MS = 1000 / MISSION_CLOCK_FPS;
       const TELEMETRY_WAITING_FPS = 2;
       const TELEMETRY_WAITING_INTERVAL_MS = 1000 / TELEMETRY_WAITING_FPS;
       const TELEMETRY_BUFFER_LIMIT = 48;
@@ -1649,6 +1705,30 @@
       const SPACE_STARFIELD_WRAP_Y = 170;
       const STARFIELD_TWINKLE_MIN_INTERVAL_MS = 280;
       const STARFIELD_TWINKLE_MAX_INTERVAL_MS = 720;
+      const missionClockDateFormatter = new Intl.DateTimeFormat('es-AR', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+      });
+      const missionClockTimeFormatter = new Intl.DateTimeFormat('es-AR', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      });
+      const missionClockUtcDateFormatter = new Intl.DateTimeFormat('es-AR', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        timeZone: 'UTC'
+      });
+      const missionClockUtcTimeFormatter = new Intl.DateTimeFormat('es-AR', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+        timeZone: 'UTC'
+      });
 
       const directionLabels = {
         Forward: 'Manual adelante',
@@ -1666,6 +1746,44 @@
 
       function setStatus(text) {
         statusPill.textContent = text;
+      }
+
+      function renderMissionClock(now = new Date()) {
+        if (!missionClockValue) {
+          return;
+        }
+
+        const dateText = missionClockDateFormatter.format(now).replace('.', '');
+        const timeText = missionClockTimeFormatter.format(now);
+        missionClockValue.textContent = `LOCAL: ${dateText} · ${timeText}`;
+
+        if (!missionClockUtcValue) {
+          return;
+        }
+
+        const utcDateText = missionClockUtcDateFormatter.format(now).replace('.', '');
+        const utcTimeText = missionClockUtcTimeFormatter.format(now);
+        missionClockUtcValue.textContent = `UTC: ${utcDateText} · ${utcTimeText}`;
+      }
+
+      function stopMissionClock() {
+        if (missionClockTimer === null) {
+          return;
+        }
+
+        clearInterval(missionClockTimer);
+        missionClockTimer = null;
+      }
+
+      function ensureMissionClock() {
+        if (!missionClockValue || document.hidden || missionClockTimer !== null) {
+          return;
+        }
+
+        renderMissionClock();
+        missionClockTimer = setInterval(() => {
+          renderMissionClock();
+        }, MISSION_CLOCK_INTERVAL_MS);
       }
 
       function applySpaceParallax() {
@@ -2882,11 +3000,13 @@
       });
 
       buildStarfield();
+      ensureMissionClock();
       applySpaceParallax();
       ensureSpaceDriftLoop();
       scheduleStarfieldTwinkle();
       document.addEventListener('visibilitychange', () => {
         if (document.hidden) {
+          stopMissionClock();
           stopSpaceDriftLoop();
           clearStarfieldTwinkleTimer();
           stopTelemetryWaitingAnimation();
@@ -2894,6 +3014,7 @@
           return;
         }
 
+        ensureMissionClock();
         ensureSpaceDriftLoop();
         scheduleStarfieldTwinkle();
         if (telemetryWaitingVisible) {
