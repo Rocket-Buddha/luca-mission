@@ -1082,7 +1082,7 @@
         flex: 0 0 clamp(196px, 24dvh, 248px);
         min-height: 0;
         display: grid;
-        grid-template-columns: minmax(0, 1.45fr) minmax(260px, 0.8fr);
+        grid-template-columns: minmax(0, 1.35fr) minmax(240px, 0.68fr) minmax(260px, 0.84fr);
         gap: clamp(8px, 1vw, 12px);
       }
 
@@ -1140,6 +1140,174 @@
         margin-bottom: 8px;
         font-family: var(--font-display);
         font-weight: 700;
+      }
+
+      .battery-panel {
+        min-height: 0;
+        min-width: 0;
+        padding: clamp(10px, 1vw, 14px);
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        overflow: hidden;
+      }
+
+      .battery-panel[data-level="low"] {
+        border-color: rgba(255, 188, 90, 0.46);
+      }
+
+      .battery-panel[data-level="critical"] {
+        border-color: rgba(255, 124, 124, 0.52);
+        box-shadow:
+          var(--shadow),
+          0 0 0 1px rgba(255, 124, 124, 0.08);
+      }
+
+      .battery-panel[data-link="offline"] {
+        border-color: rgba(255, 194, 110, 0.32);
+      }
+
+      .battery-readout {
+        min-width: 0;
+        overflow: hidden;
+      }
+
+      .battery-percent {
+        position: relative;
+        z-index: 1;
+        color: #ffffff;
+        font-size: 0.82rem;
+        line-height: 1;
+        letter-spacing: 0.08em;
+        font-family: var(--font-mono);
+        font-variant-numeric: tabular-nums;
+        font-weight: 700;
+        white-space: nowrap;
+        -webkit-text-stroke: 2px #000000;
+        paint-order: stroke fill;
+      }
+
+      .battery-bar {
+        position: relative;
+        height: 26px;
+        border-radius: 999px;
+        overflow: hidden;
+        border: 1px solid rgba(249, 215, 3, 0.26);
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(1, 1, 1, 0.24)),
+          rgba(1, 1, 1, 0.78);
+        box-shadow:
+          inset 0 0 0 1px rgba(255, 247, 208, 0.04),
+          inset 0 10px 18px rgba(0, 0, 0, 0.24);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .battery-fill {
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 0%;
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, #ffe98a 0%, #f9d703 58%, #efcb00 100%);
+        box-shadow:
+          0 0 18px rgba(249, 215, 3, 0.22),
+          inset 0 -2px 0 rgba(0, 0, 0, 0.18);
+        transition: width 240ms ease, filter 240ms ease, opacity 240ms ease;
+      }
+
+      .battery-fill::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          repeating-linear-gradient(
+            -58deg,
+            rgba(255, 255, 255, 0.2) 0 10px,
+            rgba(255, 255, 255, 0.06) 10px 20px
+          );
+        opacity: 0.34;
+      }
+
+      .battery-panel[data-level="low"] .battery-fill {
+        background: linear-gradient(90deg, #ffd96b 0%, #ffb347 62%, #ff9852 100%);
+      }
+
+      .battery-panel[data-level="critical"] .battery-fill {
+        background: linear-gradient(90deg, #ffb16f 0%, #ff8d5c 56%, #ff6b6b 100%);
+      }
+
+      .battery-panel[data-link="offline"] .battery-fill {
+        filter: saturate(0.78) brightness(0.92);
+      }
+
+      .battery-metrics {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 6px;
+        min-width: 0;
+      }
+
+      .battery-metric {
+        min-height: 0;
+        min-width: 0;
+        padding: 8px 10px;
+        border-radius: 12px;
+        border: 1px solid rgba(249, 215, 3, 0.16);
+        background:
+          linear-gradient(180deg, rgba(255, 247, 208, 0.03), rgba(1, 1, 1, 0.42)),
+          rgba(1, 1, 1, 0.44);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 6px;
+        overflow: hidden;
+      }
+
+      .battery-metric.wide {
+        grid-column: 1 / -1;
+      }
+
+      .battery-metric small {
+        flex: 0 0 auto;
+        color: var(--muted);
+        font-size: 0.58rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        font-family: var(--font-display);
+        font-weight: 700;
+      }
+
+      .battery-metric strong {
+        min-width: 0;
+        color: var(--text);
+        font-size: 0.82rem;
+        line-height: 1.1;
+        font-family: var(--font-mono);
+        font-variant-numeric: tabular-nums;
+        text-align: right;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .battery-panel .modes-header {
+        align-items: baseline;
+        margin-bottom: 0;
+      }
+
+      .battery-panel .panel-title {
+        font-size: clamp(0.88rem, 1.1vw, 1rem);
+        letter-spacing: 0.08em;
+      }
+
+      .battery-panel .panel-kicker {
+        margin-bottom: 4px;
+      }
+
+      .battery-panel .modes-note {
+        display: none;
       }
 
       .telemetry-panel {
@@ -1606,6 +1774,42 @@
           </div>
         </section>
 
+        <section class="panel battery-panel" id="batteryPanel" data-level="awaiting" data-link="awaiting">
+          <div class="modes-header">
+            <div>
+              <span class="panel-kicker">Energia</span>
+              <h2 class="panel-title">Bateria</h2>
+            </div>
+          </div>
+
+          <div class="battery-readout">
+            <div
+              class="battery-bar"
+              id="batteryBar"
+              role="progressbar"
+              aria-label="Nivel de bateria de UCA"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              aria-valuenow="0"
+              aria-valuetext="Esperando telemetria de bateria"
+            >
+              <div class="battery-fill" id="batteryFill"></div>
+              <strong class="battery-percent" id="batteryPercentValue">--%</strong>
+            </div>
+          </div>
+
+          <div class="battery-metrics">
+            <div class="battery-metric">
+              <small>Pack</small>
+              <strong id="batteryPackValue">--.--V</strong>
+            </div>
+            <div class="battery-metric">
+              <small>Sense</small>
+              <strong id="batterySenseValue">--.---V</strong>
+            </div>
+          </div>
+        </section>
+
         <section class="panel telemetry-panel">
           <div class="modes-header">
             <div>
@@ -1658,6 +1862,12 @@
       const torchToggle = document.getElementById('torchToggle');
       const hornButton = document.getElementById('hornButton');
       const melodyButton = document.getElementById('melodyButton');
+      const batteryPanel = document.getElementById('batteryPanel');
+      const batteryBar = document.getElementById('batteryBar');
+      const batteryFill = document.getElementById('batteryFill');
+      const batteryPercentValue = document.getElementById('batteryPercentValue');
+      const batteryPackValue = document.getElementById('batteryPackValue');
+      const batterySenseValue = document.getElementById('batterySenseValue');
       const telemetryPanel = document.querySelector('.telemetry-panel');
       const telemetryConsole = document.getElementById('telemetryConsole');
       const telemetryFullscreenButton = document.getElementById('telemetryFullscreenButton');
@@ -1688,6 +1898,7 @@
       let telemetryOfflineState = false;
       let lastTelemetryAliveAt = 0;
       const telemetryBuffer = [];
+      let lastAcceptedBatterySnapshot = null;
       let touchHoldDirection = null;
       let connectedGamepadIndex = null;
       let lastGamepadButtons = [];
@@ -1743,7 +1954,7 @@
         'rgba(152, 255, 188, 0.9)',
         'rgba(255, 138, 138, 0.88)'
       ];
-      const SPACE_DRIFT_FPS = 5;
+      const SPACE_DRIFT_FPS = 10;
       const SPACE_DRIFT_INTERVAL_MS = 1000 / SPACE_DRIFT_FPS;
       const SPACE_DRIFT_MAX_DELTA_MS = 2000;
       const SPACE_WRAP_FADE_MS = 1000;
@@ -2281,6 +2492,8 @@
 
       function handleTelemetryDisconnect(message) {
         startTelemetryWaitingAnimation('Reconectando telemetria de UCA');
+        setBatteryTelemetryLinkState('offline');
+        resetBatterySnapshot();
         if (telemetryOfflineState) {
           return;
         }
@@ -2300,6 +2513,7 @@
 
       function markTelemetryAlive() {
         telemetryOfflineState = false;
+        setBatteryTelemetryLinkState('online');
         lastTelemetryAliveAt = Date.now();
         clearTelemetryAliveWatch();
         telemetryAliveTimer = setTimeout(() => {
@@ -2463,6 +2677,8 @@
         if (mode === 'stream') {
           beginStreamRequest('Esperando el stream de UCA.');
         } else {
+          setBatteryTelemetryLinkState('awaiting');
+          resetBatterySnapshot();
           cameraStage.classList.remove('has-video');
           camera.classList.remove('is-visible');
           setVideoSearchState(false);
@@ -2534,12 +2750,85 @@
         }
       }
 
+      function setBatteryTelemetryLinkState(nextState) {
+        batteryPanel.dataset.link = nextState;
+      }
+
+      function resetBatterySnapshot() {
+        batteryPanel.dataset.level = 'awaiting';
+        batteryPercentValue.textContent = '--%';
+        batteryPackValue.textContent = '--.--V';
+        batterySenseValue.textContent = '--.---V';
+        batteryFill.style.width = '0%';
+        batteryBar.setAttribute('aria-valuenow', '0');
+        batteryBar.setAttribute('aria-valuetext', 'Sin telemetria de bateria');
+        lastAcceptedBatterySnapshot = null;
+      }
+
+      function parseBatteryTelemetryEntry(line) {
+        const match = line.match(/\[BODY\]\[BATTERY\]\s+pct=(\d{1,3})\s+pack=([0-9]+(?:\.[0-9]+)?)V\s+sense=([0-9]+(?:\.[0-9]+)?)V/i);
+        if (!match) {
+          return null;
+        }
+
+        return {
+          percent: Number(match[1]),
+          packVoltage: Number(match[2]),
+          senseVoltage: Number(match[3])
+        };
+      }
+
+      function renderBatterySnapshot(snapshot) {
+        const percent = clamp(Math.round(snapshot.percent), 0, 100);
+        let level = 'nominal';
+        if (percent <= 15) {
+          level = 'critical';
+        } else if (percent <= 35) {
+          level = 'low';
+        }
+
+        batteryPanel.dataset.level = level;
+        batteryPercentValue.textContent = `${percent}%`;
+        batteryPackValue.textContent = `${snapshot.packVoltage.toFixed(2)}V`;
+        batterySenseValue.textContent = `${snapshot.senseVoltage.toFixed(3)}V`;
+        batteryFill.style.width = `${percent}%`;
+        batteryBar.setAttribute('aria-valuenow', String(percent));
+        batteryBar.setAttribute(
+          'aria-valuetext',
+          `${percent}% pack ${snapshot.packVoltage.toFixed(2)} volts sense ${snapshot.senseVoltage.toFixed(3)} volts`
+        );
+      }
+
+      function captureBatteryTelemetry(line) {
+        const snapshot = parseBatteryTelemetryEntry(line);
+        if (!snapshot) {
+          return;
+        }
+
+        if (
+          !Number.isFinite(snapshot.percent) ||
+          !Number.isFinite(snapshot.packVoltage) ||
+          !Number.isFinite(snapshot.senseVoltage)
+        ) {
+          return;
+        }
+
+        snapshot.percent = clamp(Math.round(snapshot.percent), 0, 100);
+        if (lastAcceptedBatterySnapshot && snapshot.percent > lastAcceptedBatterySnapshot.percent) {
+          return;
+        }
+
+        lastAcceptedBatterySnapshot = snapshot;
+        renderBatterySnapshot(snapshot);
+      }
+
       function appendTelemetryEntry(line) {
         const trimmed = (line || '').trim();
         if (!trimmed) {
           return;
         }
 
+        captureBatteryTelemetry(trimmed);
         telemetryWaitingVisible = false;
         stopTelemetryWaitingAnimation();
         telemetryBuffer.push(trimmed);
