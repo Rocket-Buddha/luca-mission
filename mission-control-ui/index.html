@@ -55,8 +55,19 @@
 
       body {
         overflow: hidden;
+        position: relative;
         font-family: var(--font-ui);
         color: var(--text);
+        background: linear-gradient(180deg, #07090d 0%, #020305 40%, #000000 100%);
+        user-select: none;
+      }
+
+      .space-backdrop {
+        position: fixed;
+        inset: -220px;
+        z-index: 0;
+        pointer-events: none;
+        opacity: 1;
         background:
           radial-gradient(circle at 14% 14%, rgba(255, 246, 189, 0.12), transparent 16%),
           radial-gradient(circle at 74% 12%, rgba(98, 118, 184, 0.16), transparent 22%),
@@ -71,16 +82,19 @@
           var(--space-bg-x) var(--space-bg-y),
           var(--space-bg-x) var(--space-bg-y),
           var(--space-bg-x) var(--space-bg-y);
-        user-select: none;
+        transition: opacity 1000ms ease;
+        will-change: opacity, background-position;
       }
 
       body::before {
         content: "";
         position: fixed;
         inset: -220px;
+        z-index: 0;
         pointer-events: none;
         opacity: 0.88;
         transform: translate3d(var(--space-far-x), var(--space-far-y), 0);
+        filter: brightness(1);
         background:
           radial-gradient(circle at 6% 18%, rgba(255, 255, 255, 0.98) 0 2.1px, transparent 3.2px),
           radial-gradient(circle at 12% 61%, rgba(255, 247, 208, 0.96) 0 1.85px, transparent 2.9px),
@@ -144,15 +158,19 @@
           0 0,
           10px 24px,
           90px 64px;
+        transition: opacity 1000ms ease;
+        will-change: opacity, transform, filter;
       }
 
       body::after {
         content: "";
         position: fixed;
         inset: -220px;
+        z-index: 0;
         pointer-events: none;
         opacity: 0.82;
         transform: translate3d(var(--space-near-x), var(--space-near-y), 0);
+        filter: brightness(1);
         background:
           radial-gradient(circle at 16% 26%, rgba(255, 255, 255, 0.2), transparent 0 5px),
           radial-gradient(circle at 31% 68%, rgba(249, 215, 3, 0.18), transparent 0 5px),
@@ -161,15 +179,37 @@
           radial-gradient(circle at 88% 22%, rgba(255, 138, 138, 0.2), transparent 0 5px),
           radial-gradient(circle at 92% 78%, rgba(147, 255, 183, 0.22), transparent 0 5px);
         background-size: 100% 100%;
+        transition: opacity 1000ms ease;
+        will-change: opacity, transform, filter;
       }
 
       .starfield {
         position: fixed;
-        inset: -260px;
         z-index: 0;
         overflow: hidden;
         pointer-events: none;
+        transition: opacity 1000ms ease;
+        will-change: opacity, transform;
+      }
+
+      .starfield--far {
+        inset: -220px;
+        opacity: 0.62;
+        transform: translate3d(var(--space-far-x), var(--space-far-y), 0);
+        filter: blur(0.15px);
+      }
+
+      .starfield--near {
+        inset: -260px;
+        opacity: 0.98;
         transform: translate3d(var(--space-live-x), var(--space-live-y), 0);
+      }
+
+      body.space-transitioning .space-backdrop,
+      body.space-transitioning::before,
+      body.space-transitioning::after,
+      body.space-transitioning .starfield {
+        opacity: 0;
       }
 
       .starfield-star {
@@ -179,6 +219,10 @@
         opacity: var(--star-base-opacity, 0.42);
         transform: translate(-50%, -50%) scale(1);
         box-shadow: 0 0 calc(var(--star-glow-size, 10px) * 0.9) rgba(255, 247, 208, 0.22);
+      }
+
+      .starfield--far .starfield-star {
+        box-shadow: 0 0 calc(var(--star-glow-size, 10px) * 0.72) rgba(255, 247, 208, 0.14);
       }
 
       .starfield-star.is-twinkling {
@@ -212,8 +256,6 @@
           linear-gradient(180deg, rgba(255, 247, 208, 0.04), rgba(249, 215, 3, 0.02) 18%, transparent 34%),
           var(--panel);
         box-shadow: var(--shadow);
-        backdrop-filter: blur(1px) saturate(135%);
-        -webkit-backdrop-filter: blur(1px) saturate(135%);
       }
 
       .topbar {
@@ -1344,7 +1386,9 @@
     </style>
   </head>
   <body>
-    <div class="starfield" id="starfield" aria-hidden="true"></div>
+    <div class="space-backdrop" aria-hidden="true"></div>
+    <div class="starfield starfield--far" id="starfieldFar" aria-hidden="true"></div>
+    <div class="starfield starfield--near" id="starfield" aria-hidden="true"></div>
     <div class="app-shell">
       <header class="panel topbar">
         <div class="brand">
@@ -1598,6 +1642,7 @@
       const statusPill = document.getElementById('statusPill');
       const missionClockValue = document.getElementById('missionClockValue');
       const missionClockUtcValue = document.getElementById('missionClockUtcValue');
+      const starfieldFar = document.getElementById('starfieldFar');
       const starfield = document.getElementById('starfield');
       const feedBadge = document.getElementById('feedBadge');
       const visionPanel = document.querySelector('.vision-panel');
@@ -1659,6 +1704,9 @@
       let spaceBackgroundOffsetY = 0;
       let spaceStarfieldOffsetX = 0;
       let spaceStarfieldOffsetY = 0;
+      let spaceWrapFadeTimer = null;
+      let spaceWrapRestoreTimer = null;
+      let spaceWrapActive = false;
 
       const GAMEPAD_STICK_DEADZONE = 0.18;
       const GAMEPAD_SERVO_DEADZONE = 0.22;
@@ -1683,7 +1731,10 @@
       const ROVER_CONTROL_URL = ROVER_BASE_URL + '/control';
       const ROVER_CAMERA_URL = ROVER_BASE_URL + ':81';
       const TELEMETRY_STREAM_URL = ROVER_BASE_URL + ':82/telemetry';
-      const STARFIELD_COUNT = 56;
+      const STARFIELD_FAR_COUNT = 108;
+      const STARFIELD_NEAR_COUNT = 148;
+      const STARFIELD_FAR_TWINKLE_COUNT = 2;
+      const STARFIELD_NEAR_TWINKLE_COUNT = 3;
       const STARFIELD_COLORS = [
         'rgba(255, 255, 255, 0.96)',
         'rgba(255, 247, 208, 0.94)',
@@ -1695,6 +1746,7 @@
       const SPACE_DRIFT_FPS = 5;
       const SPACE_DRIFT_INTERVAL_MS = 1000 / SPACE_DRIFT_FPS;
       const SPACE_DRIFT_MAX_DELTA_MS = 2000;
+      const SPACE_WRAP_FADE_MS = 1000;
       const SPACE_BACKGROUND_SPEED_X = 1.5;
       const SPACE_BACKGROUND_SPEED_Y = 0.85;
       const SPACE_STARFIELD_SPEED_X = 3.375;
@@ -1786,7 +1838,23 @@
         }, MISSION_CLOCK_INTERVAL_MS);
       }
 
+      function clearSpaceWrapTransition() {
+        if (spaceWrapFadeTimer !== null) {
+          clearTimeout(spaceWrapFadeTimer);
+          spaceWrapFadeTimer = null;
+        }
+
+        if (spaceWrapRestoreTimer !== null) {
+          clearTimeout(spaceWrapRestoreTimer);
+          spaceWrapRestoreTimer = null;
+        }
+
+        spaceWrapActive = false;
+        document.body.classList.remove('space-transitioning');
+      }
+
       function applySpaceParallax() {
+        clearSpaceWrapTransition();
         lastSpaceDriftAt = 0;
         spaceBackgroundOffsetX = 0;
         spaceBackgroundOffsetY = 0;
@@ -1827,6 +1895,40 @@
         return offset;
       }
 
+      function needsSpaceWrap(offset, limit) {
+        return limit > 0 && (offset >= limit || offset <= -limit);
+      }
+
+      function startSpaceWrapTransition(nextBackgroundX, nextBackgroundY, nextStarfieldX, nextStarfieldY) {
+        if (spaceWrapActive) {
+          return;
+        }
+
+        spaceWrapActive = true;
+        document.body.classList.add('space-transitioning');
+
+        spaceWrapFadeTimer = window.setTimeout(() => {
+          spaceWrapFadeTimer = null;
+          spaceBackgroundOffsetX = nextBackgroundX;
+          spaceBackgroundOffsetY = nextBackgroundY;
+          spaceStarfieldOffsetX = nextStarfieldX;
+          spaceStarfieldOffsetY = nextStarfieldY;
+          setSpaceLayerOffsets(
+            spaceBackgroundOffsetX,
+            spaceBackgroundOffsetY,
+            spaceStarfieldOffsetX,
+            spaceStarfieldOffsetY
+          );
+          document.body.classList.remove('space-transitioning');
+
+          spaceWrapRestoreTimer = window.setTimeout(() => {
+            spaceWrapRestoreTimer = null;
+            spaceWrapActive = false;
+            lastSpaceDriftAt = performance.now();
+          }, SPACE_WRAP_FADE_MS);
+        }, SPACE_WRAP_FADE_MS);
+      }
+
       function stepSpaceDrift(now = performance.now()) {
         if (!lastSpaceDriftAt) {
           lastSpaceDriftAt = now;
@@ -1836,28 +1938,35 @@
         const deltaMs = Math.min(now - lastSpaceDriftAt, SPACE_DRIFT_MAX_DELTA_MS);
         lastSpaceDriftAt = now;
 
-        if (deltaMs <= 0) {
+        if (deltaMs <= 0 || spaceWrapActive) {
           return;
         }
 
         const deltaSeconds = deltaMs / 1000;
+        const nextBackgroundOffsetX = spaceBackgroundOffsetX + SPACE_BACKGROUND_SPEED_X * deltaSeconds;
+        const nextBackgroundOffsetY = spaceBackgroundOffsetY + SPACE_BACKGROUND_SPEED_Y * deltaSeconds;
+        const nextStarfieldOffsetX = spaceStarfieldOffsetX + SPACE_STARFIELD_SPEED_X * deltaSeconds;
+        const nextStarfieldOffsetY = spaceStarfieldOffsetY + SPACE_STARFIELD_SPEED_Y * deltaSeconds;
 
-        spaceBackgroundOffsetX = wrapSpaceOffset(
-          spaceBackgroundOffsetX + SPACE_BACKGROUND_SPEED_X * deltaSeconds,
-          SPACE_BACKGROUND_WRAP_X
-        );
-        spaceBackgroundOffsetY = wrapSpaceOffset(
-          spaceBackgroundOffsetY + SPACE_BACKGROUND_SPEED_Y * deltaSeconds,
-          SPACE_BACKGROUND_WRAP_Y
-        );
-        spaceStarfieldOffsetX = wrapSpaceOffset(
-          spaceStarfieldOffsetX + SPACE_STARFIELD_SPEED_X * deltaSeconds,
-          SPACE_STARFIELD_WRAP_X
-        );
-        spaceStarfieldOffsetY = wrapSpaceOffset(
-          spaceStarfieldOffsetY + SPACE_STARFIELD_SPEED_Y * deltaSeconds,
-          SPACE_STARFIELD_WRAP_Y
-        );
+        if (
+          needsSpaceWrap(nextBackgroundOffsetX, SPACE_BACKGROUND_WRAP_X) ||
+          needsSpaceWrap(nextBackgroundOffsetY, SPACE_BACKGROUND_WRAP_Y) ||
+          needsSpaceWrap(nextStarfieldOffsetX, SPACE_STARFIELD_WRAP_X) ||
+          needsSpaceWrap(nextStarfieldOffsetY, SPACE_STARFIELD_WRAP_Y)
+        ) {
+          startSpaceWrapTransition(
+            wrapSpaceOffset(nextBackgroundOffsetX, SPACE_BACKGROUND_WRAP_X),
+            wrapSpaceOffset(nextBackgroundOffsetY, SPACE_BACKGROUND_WRAP_Y),
+            wrapSpaceOffset(nextStarfieldOffsetX, SPACE_STARFIELD_WRAP_X),
+            wrapSpaceOffset(nextStarfieldOffsetY, SPACE_STARFIELD_WRAP_Y)
+          );
+          return;
+        }
+
+        spaceBackgroundOffsetX = nextBackgroundOffsetX;
+        spaceBackgroundOffsetY = nextBackgroundOffsetY;
+        spaceStarfieldOffsetX = nextStarfieldOffsetX;
+        spaceStarfieldOffsetY = nextStarfieldOffsetY;
 
         setSpaceLayerOffsets(
           spaceBackgroundOffsetX,
@@ -1868,6 +1977,7 @@
       }
 
       function stopSpaceDriftLoop() {
+        clearSpaceWrapTransition();
         if (spaceDriftTimer === null) {
           lastSpaceDriftAt = 0;
           return;
@@ -1896,25 +2006,33 @@
         }
       }
 
-      function buildStarfield() {
-        if (!starfield) {
+      function buildStarfieldLayer(container, options) {
+        if (!container) {
           return;
         }
 
         const fragment = document.createDocumentFragment();
-        for (let index = 0; index < STARFIELD_COUNT; index += 1) {
+        for (let index = 0; index < options.count; index += 1) {
           const star = document.createElement('span');
-          const size = (1.2 + Math.random() * 3.1).toFixed(2);
-          const baseOpacity = (0.24 + Math.random() * 0.48).toFixed(2);
+          const size = (options.minSize + Math.random() * (options.maxSize - options.minSize)).toFixed(2);
+          const baseOpacity = (
+            options.minOpacity + Math.random() * (options.maxOpacity - options.minOpacity)
+          ).toFixed(2);
           const color = STARFIELD_COLORS[Math.floor(Math.random() * STARFIELD_COLORS.length)];
+          const leftPercent =
+            options.safeInsetPercent +
+            Math.random() * (100 - options.safeInsetPercent * 2);
+          const topPercent =
+            options.safeInsetPercent +
+            Math.random() * (100 - options.safeInsetPercent * 2);
 
           star.className = 'starfield-star';
-          star.style.left = (Math.random() * 100).toFixed(2) + '%';
-          star.style.top = (Math.random() * 100).toFixed(2) + '%';
+          star.style.left = leftPercent.toFixed(2) + '%';
+          star.style.top = topPercent.toFixed(2) + '%';
           star.style.width = size + 'px';
           star.style.height = size + 'px';
           star.style.setProperty('--star-base-opacity', baseOpacity);
-          star.style.setProperty('--star-glow-size', (Number(size) * 5).toFixed(1) + 'px');
+          star.style.setProperty('--star-glow-size', (Number(size) * options.glowMultiplier).toFixed(1) + 'px');
           star.style.setProperty('--star-color', color);
           star.addEventListener('animationend', () => {
             star.classList.remove('is-twinkling');
@@ -1922,24 +2040,56 @@
           fragment.appendChild(star);
         }
 
-        starfield.replaceChildren(fragment);
+        container.replaceChildren(fragment);
       }
 
-      function twinkleRandomStars() {
-        if (!starfield) {
+      function buildStarfield() {
+        buildStarfieldLayer(starfieldFar, {
+          count: STARFIELD_FAR_COUNT,
+          minSize: 0.9,
+          maxSize: 2.3,
+          minOpacity: 0.14,
+          maxOpacity: 0.34,
+          glowMultiplier: 4,
+          safeInsetPercent: 8
+        });
+
+        buildStarfieldLayer(starfield, {
+          count: STARFIELD_NEAR_COUNT,
+          minSize: 1.2,
+          maxSize: 3.4,
+          minOpacity: 0.22,
+          maxOpacity: 0.56,
+          glowMultiplier: 5.2,
+          safeInsetPercent: 7
+        });
+      }
+
+      function isStarVisible(star) {
+        const rect = star.getBoundingClientRect();
+        return rect.right > 0 && rect.bottom > 0 && rect.left < window.innerWidth && rect.top < window.innerHeight;
+      }
+
+      function getVisibleStars(container) {
+        if (!container) {
+          return [];
+        }
+
+        return Array.from(container.children).filter((star) => isStarVisible(star));
+      }
+
+      function twinkleStarSet(stars, twinkleCount) {
+        if (!stars.length || twinkleCount <= 0) {
           return;
         }
 
-        const stars = Array.from(starfield.children);
-        if (!stars.length) {
-          return;
-        }
-
-        const twinkleCount = 1;
+        const availableStars = stars.filter((star) => !star.classList.contains('is-twinkling'));
+        const source = availableStars.length ? availableStars : stars;
         const selectedStars = new Set();
+        const targetCount = Math.min(twinkleCount, source.length);
 
-        while (selectedStars.size < twinkleCount) {
-          selectedStars.add(stars[Math.floor(Math.random() * stars.length)]);
+        while (selectedStars.size < targetCount) {
+          selectedStars.add(source[Math.floor(Math.random() * source.length)]);
         }
 
         selectedStars.forEach((star) => {
@@ -1948,6 +2098,15 @@
           void star.offsetWidth;
           star.classList.add('is-twinkling');
         });
+      }
+
+      function twinkleRandomStars() {
+        if (document.hidden || spaceWrapActive) {
+          return;
+        }
+
+        twinkleStarSet(getVisibleStars(starfieldFar), STARFIELD_FAR_TWINKLE_COUNT);
+        twinkleStarSet(getVisibleStars(starfield), STARFIELD_NEAR_TWINKLE_COUNT);
       }
 
       function scheduleStarfieldTwinkle() {
