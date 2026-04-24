@@ -157,6 +157,18 @@ int melodyIndex = 0;
 unsigned long melodyStepStartedAt = 0;
 unsigned long melodyStepDurationMs = 0;
 
+const int BATTERY_ADC_PIN = 34;
+const int BATTERY_ADC_SAMPLE_COUNT = 16;
+const unsigned long BATTERY_SAMPLE_INTERVAL_MS = 10000;
+const float BATTERY_DIVIDER_R1_OHMS = 10000.0f;
+const float BATTERY_DIVIDER_R2_OHMS = 4500.0f;
+const float BATTERY_PACK_EMPTY_V = 6.0f;
+const float BATTERY_PACK_FULL_V = 8.4f;
+
+float batteryPackVoltage = 0.0f;
+int batteryPercent = 0;
+unsigned long lastBatterySampleMs = 0;
+
 void logPacket(const char *tag, int length) {
   Serial.print(tag);
   Serial.print(" len=");
@@ -218,6 +230,49 @@ void telemetryPrintf(const char *tag, const char *format, ...) {
   Serial.printf("[BODY][%s] %s\n", tag, message);
 }
 
+float clampFloat(float value, float minValue, float maxValue) {
+  if (value < minValue) {
+    return minValue;
+  }
+  if (value > maxValue) {
+    return maxValue;
+  }
+  return value;
+}
+
+int calculateBatteryPercent(float packVoltage) {
+  const float normalized =
+    (packVoltage - BATTERY_PACK_EMPTY_V) / (BATTERY_PACK_FULL_V - BATTERY_PACK_EMPTY_V);
+  return static_cast<int>(roundf(clampFloat(normalized, 0.0f, 1.0f) * 100.0f));
+}
+
+void updateBatteryTelemetry() {
+  const unsigned long now = millis();
+  if (lastBatterySampleMs != 0 && now - lastBatterySampleMs < BATTERY_SAMPLE_INTERVAL_MS) {
+    return;
+  }
+
+  lastBatterySampleMs = now;
+
+  // Warm up the ADC channel once before averaging the calibrated reads.
+  analogReadMilliVolts(BATTERY_ADC_PIN);
+
+  uint32_t totalMilliVolts = 0;
+  for (int sampleIndex = 0; sampleIndex < BATTERY_ADC_SAMPLE_COUNT; sampleIndex++) {
+    totalMilliVolts += analogReadMilliVolts(BATTERY_ADC_PIN);
+  }
+
+  const float senseVoltage =
+    (static_cast<float>(totalMilliVolts) / BATTERY_ADC_SAMPLE_COUNT) / 1000.0f;
+  const float dividerScale =
+    (BATTERY_DIVIDER_R1_OHMS + BATTERY_DIVIDER_R2_OHMS) / BATTERY_DIVIDER_R2_OHMS;
+
+  batteryPackVoltage = senseVoltage * dividerScale;
+  batteryPercent = calculateBatteryPercent(batteryPackVoltage);
+
+  telemetryPrintf("BATTERY", "pct=%d pack=%.2fV sense=%.3fV", batteryPercent, batteryPackVoltage, senseVoltage);
+}
+
 enum FUNCTION_MODE {
   STANDBY,
   FOLLOW,
@@ -276,9 +331,13 @@ void setup() {
   pinMode(LED_Module2, OUTPUT);   // Set pin 2 of the LED module as output
   pinMode(Shoot_PIN, OUTPUT);     // Set shooting pin as output
   pinMode(Buzzer, OUTPUT);        // Set buzzer pin as output
+  pinMode(BATTERY_ADC_PIN, INPUT);  // Set battery sense pin as ADC input
   pinMode(Left_sensor, INPUT);    // Set the infrared left line pin as input
   pinMode(Middle_sensor, INPUT);  // Set the infrared middle line pin as input
   pinMode(Right_sensor, INPUT);   // Set the infrared right line pin as input
+
+  analogReadResolution(12);
+  analogSetPinAttenuation(BATTERY_ADC_PIN, ADC_11db);
 
   ESP32PWM::allocateTimer(1);          // Assign timer 1 to ESP32PWM library
   fixedServo.attach(FIXED_SERVO_PIN);           // Connect the servo to the FIXED_SERVO_PIN pin
@@ -295,6 +354,7 @@ void loop() {
   RXpack_func();
   updateMelodyLoop();
   functionMode();
+  updateBatteryTelemetry();
 }
 
 void functionMode() {
