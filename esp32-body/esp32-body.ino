@@ -159,7 +159,7 @@ unsigned long melodyStepDurationMs = 0;
 
 const int BATTERY_ADC_PIN = 34;
 const int BATTERY_ADC_SAMPLE_COUNT = 16;
-const unsigned long BATTERY_SAMPLE_INTERVAL_MS = 10000;
+const unsigned long BATTERY_SAMPLE_INTERVAL_MS = 30000;
 const float BATTERY_DIVIDER_R1_OHMS = 10000.0f;
 const float BATTERY_DIVIDER_R2_OHMS = 4500.0f;
 const float BATTERY_PACK_EMPTY_V = 6.0f;

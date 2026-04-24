@@ -45,7 +45,10 @@ public:
 
 private:
     int motorSpeeds_[4];
+    int lastLoggedMotorSpeeds_[4];
+    bool hasLastLoggedMotorState_;
 
+    void setMotorSpeeds(int motor1Speed, int motor2Speed, int motor3Speed, int motor4Speed);
     void flushMotors();
 };
 
