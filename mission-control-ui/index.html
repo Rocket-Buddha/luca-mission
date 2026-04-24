@@ -13,6 +13,11 @@
       href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&family=Orbitron:wght@600;700;800&display=swap"
       rel="stylesheet"
     />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
       :root {
         --bg: #010101;
@@ -458,6 +463,23 @@
         justify-content: center;
         gap: 12px;
         min-height: 0;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .drive-header-copy {
+        transition: opacity 0.25s ease;
+      }
+
+      .drive-header-copy.is-swapping {
+        opacity: 0;
+      }
+
+      .drive-header-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-left: auto;
       }
 
       .joystick-shell {
@@ -473,6 +495,7 @@
         position: relative;
         touch-action: none;
         box-shadow: inset 0 0 0 1px rgba(249, 215, 3, 0.05);
+        z-index: 1;
       }
 
       .joystick-shell.engaged {
@@ -567,6 +590,113 @@
       .drive-subcontrols {
         display: flex;
         gap: 10px;
+        z-index: 1;
+      }
+
+      .drive-map-stage {
+        position: absolute;
+        inset: 0;
+        border-radius: 30px;
+        overflow: hidden;
+        background:
+          radial-gradient(circle at 30% 30%, rgba(249, 215, 3, 0.08), transparent 34%),
+          linear-gradient(180deg, rgba(249, 215, 3, 0.04), rgba(0, 0, 0, 0.28)),
+          var(--panel-alt);
+        border: 1px solid rgba(249, 215, 3, 0.18);
+        box-shadow: inset 0 0 0 1px rgba(249, 215, 3, 0.05);
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transform: translateY(10px);
+        transition:
+          opacity 0.5s ease,
+          transform 0.5s ease,
+          visibility 0s linear 0.5s;
+        z-index: 2;
+      }
+
+      .drive-map-canvas {
+        width: 100%;
+        height: 100%;
+      }
+
+      .drive-map-stage .leaflet-container {
+        width: 100%;
+        height: 100%;
+        background: #05070b;
+        font: inherit;
+      }
+
+      .drive-map-stage .leaflet-control-attribution {
+        padding: 2px 5px;
+        font-size: 0.38rem;
+        letter-spacing: 0.06em;
+        color: rgba(255, 247, 208, 0.82);
+        background: rgba(1, 1, 1, 0.58);
+      }
+
+      .drive-map-stage .leaflet-control-attribution a {
+        color: #f9d703;
+      }
+
+      .drive-map-fallback {
+        position: absolute;
+        inset: 12px;
+        z-index: 450;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 14px;
+        border-radius: 20px;
+        background: rgba(1, 1, 1, 0.74);
+        color: var(--muted);
+        font-family: var(--font-display);
+        font-size: 0.66rem;
+        line-height: 1.3;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        text-align: center;
+        pointer-events: none;
+      }
+
+      .drive-map-fallback[hidden] {
+        display: none;
+      }
+
+      .drive-map-toggle-button {
+        width: 58px;
+        min-width: 58px;
+        padding: 0;
+        flex: 0 0 auto;
+      }
+
+      .drive-map-toggle-button span {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        font-size: 0.72rem;
+        line-height: 1;
+        letter-spacing: 0.12em;
+        color: inherit;
+      }
+
+      .drive-map-toggle-button svg {
+        display: block;
+        width: 19px;
+        height: 19px;
+      }
+
+      .rover-map-icon {
+        background: transparent;
+        border: 0;
+      }
+
+      .rover-map-icon svg {
+        display: block;
+        width: 40px;
+        height: 40px;
+        filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.36));
       }
 
       .hold-button,
@@ -633,6 +763,108 @@
       .sound-button.is-active span,
       .sound-button:active span {
         color: rgba(9, 9, 9, 0.68);
+      }
+
+      .camera-button.drive-map-toggle-button span,
+      .camera-button.drive-map-toggle-button.is-active span,
+      .camera-button.drive-map-toggle-button:active span {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        font-size: 0.72rem;
+        line-height: 1;
+        letter-spacing: 0.12em;
+        color: inherit;
+      }
+
+      .camera-button.ambient-audio-button {
+        min-width: 58px;
+        padding: 6px 10px 7px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
+      }
+
+      .camera-button.ambient-audio-button .ambient-audio-glyph,
+      .camera-button.ambient-audio-button.is-active .ambient-audio-glyph,
+      .camera-button.ambient-audio-button:active .ambient-audio-glyph {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        color: inherit;
+      }
+
+      .ambient-audio-button .ambient-audio-glyph svg {
+        width: 18px;
+        height: 18px;
+        flex: 0 0 auto;
+      }
+
+      .ambient-audio-button .pad-badge {
+        margin-left: 0;
+      }
+
+      .drive-panel .joystick-shell,
+      .drive-panel .drive-subcontrols,
+      .drive-panel .meter-card {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+        transform: translateY(0);
+        transition:
+          opacity 0.5s ease,
+          transform 0.5s ease,
+          visibility 0s linear 0s,
+          width 0.5s ease,
+          padding 0.5s ease,
+          border-width 0.5s ease,
+          gap 0.5s ease;
+      }
+
+      .drive-panel[data-view="map"] .panel-body {
+        grid-template-columns: minmax(0, 1fr) 0;
+        gap: 0;
+      }
+
+      .drive-panel[data-view="map"] .joystick-shell,
+      .drive-panel[data-view="map"] .drive-subcontrols,
+      .drive-panel[data-view="map"] .meter-card {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transform: translateY(10px);
+        transition:
+          opacity 0.5s ease,
+          transform 0.5s ease,
+          visibility 0s linear 0.5s,
+          width 0.5s ease,
+          padding 0.5s ease,
+          border-width 0.5s ease,
+          gap 0.5s ease;
+      }
+
+      .drive-panel[data-view="map"] .meter-card {
+        width: 0;
+        min-width: 0;
+        padding-inline: 0;
+        border-width: 0;
+        gap: 0;
+        overflow: hidden;
+      }
+
+      .drive-panel[data-view="map"] .drive-map-stage {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+        transform: translateY(0);
+        transition:
+          opacity 0.5s ease,
+          transform 0.5s ease,
+          visibility 0s linear 0s;
       }
 
       .pad-badge {
@@ -1394,6 +1626,51 @@
         max-width: 190px;
       }
 
+      .vision-panel,
+      .telemetry-panel {
+        backface-visibility: hidden;
+        transform-origin: top left;
+        will-change: transform, opacity, filter;
+      }
+
+      .vision-panel .panel-header,
+      .vision-panel .panel-body,
+      .vision-panel .camera-panel-wrap,
+      .vision-panel .camera-stage,
+      .telemetry-panel .modes-header,
+      .telemetry-panel .telemetry-console {
+        backface-visibility: hidden;
+        will-change: transform, opacity, filter;
+      }
+
+      .vision-panel.is-fullscreen-animating .panel-header,
+      .vision-panel.is-fullscreen-animating .panel-body,
+      .vision-panel.is-fullscreen-animating .camera-panel-wrap,
+      .vision-panel.is-fullscreen-animating .camera-stage,
+      .telemetry-panel.is-fullscreen-animating .modes-header,
+      .telemetry-panel.is-fullscreen-animating .telemetry-console {
+        transition:
+          opacity 1300ms cubic-bezier(0.22, 1, 0.36, 1),
+          transform 1300ms cubic-bezier(0.22, 1, 0.36, 1),
+          filter 1300ms cubic-bezier(0.22, 1, 0.36, 1);
+      }
+
+      .vision-panel.is-fullscreen-entering .panel-header,
+      .vision-panel.is-fullscreen-entering .panel-body,
+      .telemetry-panel.is-fullscreen-entering .modes-header,
+      .telemetry-panel.is-fullscreen-entering .telemetry-console {
+        opacity: 0.82;
+        filter: saturate(1.04) brightness(1.04);
+      }
+
+      .vision-panel.is-fullscreen-exiting .panel-header,
+      .vision-panel.is-fullscreen-exiting .panel-body,
+      .telemetry-panel.is-fullscreen-exiting .modes-header,
+      .telemetry-panel.is-fullscreen-exiting .telemetry-console {
+        opacity: 0.9;
+        filter: saturate(0.98) brightness(0.98);
+      }
+
       .telemetry-panel:fullscreen,
       .telemetry-panel:-webkit-full-screen {
         width: 100vw;
@@ -1405,6 +1682,16 @@
         background:
           linear-gradient(180deg, rgba(249, 215, 3, 0.05), rgba(249, 215, 3, 0.02)),
           #010101;
+      }
+
+      .telemetry-panel:fullscreen::backdrop,
+      .telemetry-panel:-webkit-full-screen::backdrop,
+      .vision-panel:fullscreen::backdrop,
+      .vision-panel:-webkit-full-screen::backdrop {
+        background:
+          radial-gradient(circle at 50% 22%, rgba(249, 215, 3, 0.09), transparent 28%),
+          rgba(1, 1, 1, 0.94);
+        backdrop-filter: blur(10px);
       }
 
       .telemetry-panel:fullscreen .telemetry-console,
@@ -1572,7 +1859,7 @@
         <div class="topbar-actions">
           <div class="camera-actions">
             <button class="camera-button is-active" id="streamToggleButton" data-camera="stream" type="button">
-              Stream <b class="pad-badge">LT</b> + <b class="pad-badge">X</b>
+              Stream <b class="pad-badge">LT</b> +<b class="pad-badge">X</b>
               <span>live feed</span>
             </button>
             <button class="camera-button" id="photoButton" type="button">
@@ -1583,6 +1870,27 @@
               Luz <b class="pad-badge">Y</b>
               <span>frontal</span>
             </button>
+            <button class="camera-button ambient-audio-button" id="ambientAudioToggle" type="button">
+              <span class="ambient-audio-glyph" id="ambientAudioToggleGlyph" aria-hidden="true">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path
+                    d="M5 14h3.3l4.2 4.2V5.8L8.3 10H5z"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-linejoin="round"
+                    stroke-width="1.8"
+                  />
+                  <path
+                    d="M16 9.2a4.2 4.2 0 0 1 0 5.6M18.6 6.8a7.6 7.6 0 0 1 0 10.4"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-width="1.8"
+                  />
+                </svg>
+              </span>
+              <b class="pad-badge">START</b>
+            </button>
           </div>
           <div class="mission-clock" aria-label="Fecha y hora local">
             <span class="mission-clock-value" id="missionClockValue">LOCAL: -- --- ---- · --:--:--</span>
@@ -1591,12 +1899,47 @@
         </div>
       </header>
 
+      <audio id="ambientAudio" preload="auto" loop>
+        <source src="./MyVeryOwnDeadShip.ogg" type="audio/ogg" />
+      </audio>
+
       <main class="main-grid">
-        <section class="panel drive-panel">
+        <section class="panel drive-panel" data-view="stick">
           <div class="panel-header">
-            <div>
-              <span class="panel-kicker">Movimiento</span>
-              <h2 class="panel-title">Stick principal</h2>
+            <div class="drive-header-copy" id="driveHeaderCopy">
+              <span class="panel-kicker" id="drivePanelKicker">Movimiento</span>
+              <h2 class="panel-title" id="drivePanelTitle">Stick principal</h2>
+            </div>
+            <div class="drive-header-actions">
+              <p class="panel-note">
+                <b class="pad-badge">LT</b> +<b class="pad-badge">B</b>
+              </p>
+              <button
+                class="camera-button drive-map-toggle-button"
+                id="driveViewToggleButton"
+                type="button"
+                title="Mostrar mapa"
+                aria-label="Mostrar mapa"
+              >
+                <span id="driveViewToggleGlyph" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" focusable="false">
+                    <path
+                      d="M3.5 6.5 8.5 4.5l7 2 5-2v13l-5 2-7-2-5 2z"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-linejoin="round"
+                      stroke-width="1.8"
+                    />
+                    <path
+                      d="M8.5 4.5v13M15.5 6.5v13"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-linejoin="round"
+                      stroke-width="1.8"
+                    />
+                  </svg>
+                </span>
+              </button>
             </div>
           </div>
           <div class="panel-body">
@@ -1616,6 +1959,10 @@
                   Giro R <b class="pad-badge">RB</b>
                   <span>spin</span>
                 </button>
+              </div>
+              <div class="drive-map-stage" id="driveMapStage" aria-hidden="true">
+                <div class="drive-map-canvas" id="driveMapCanvas"></div>
+                <div class="drive-map-fallback" id="driveMapFallback" hidden>Mapa rover no disponible</div>
               </div>
             </div>
 
@@ -1647,7 +1994,7 @@
             </div>
             <div class="telemetry-header-actions camera-header-actions">
               <p class="panel-note">
-                <b class="pad-badge">LT</b> + <b class="pad-badge">Y</b>
+                <b class="pad-badge">LT</b> +<b class="pad-badge">Y</b>
               </p>
               <button
                 class="camera-button panel-fullscreen-button"
@@ -1818,7 +2165,7 @@
             </div>
             <div class="telemetry-header-actions">
               <p class="telemetry-note">
-                <b class="pad-badge">LT</b> + <b class="pad-badge">A</b><br>
+                <b class="pad-badge">LT</b> +<b class="pad-badge">A</b><br>
                 <b class="pad-badge">RS</b> ↑ ↓
               </p>
               <button
@@ -1853,10 +2200,22 @@
       const cameraFullscreenButton = document.getElementById('cameraFullscreenButton');
       const cameraFullscreenGlyph = document.getElementById('cameraFullscreenGlyph');
       const photoButton = document.getElementById('photoButton');
+      const ambientAudio = document.getElementById('ambientAudio');
+      const ambientAudioToggle = document.getElementById('ambientAudioToggle');
+      const ambientAudioToggleGlyph = document.getElementById('ambientAudioToggleGlyph');
       const speedInput = document.getElementById('speed');
       const speedValue = document.getElementById('speedValue');
       const servoInput = document.getElementById('servo');
       const servoValue = document.getElementById('servoValue');
+      const drivePanel = document.querySelector('.drive-panel');
+      const driveHeaderCopy = document.getElementById('driveHeaderCopy');
+      const drivePanelKicker = document.getElementById('drivePanelKicker');
+      const drivePanelTitle = document.getElementById('drivePanelTitle');
+      const driveViewToggleButton = document.getElementById('driveViewToggleButton');
+      const driveViewToggleGlyph = document.getElementById('driveViewToggleGlyph');
+      const driveMapStage = document.getElementById('driveMapStage');
+      const driveMapCanvas = document.getElementById('driveMapCanvas');
+      const driveMapFallback = document.getElementById('driveMapFallback');
       const joystickZone = document.getElementById('joystickZone');
       const joystickThumb = document.getElementById('joystickThumb');
       const torchToggle = document.getElementById('torchToggle');
@@ -1879,6 +2238,10 @@
       const holdButtons = Array.from(document.querySelectorAll('[data-hold]'));
 
       let activeModeButton = null;
+      let activeDrivePanelView = 'stick';
+      let driveMap = null;
+      let driveMapMarker = null;
+      let driveHeaderSwapTimer = null;
       let torchEnabled = false;
       let activeDriveDirection = 'stop';
       let joystickPointerId = null;
@@ -1907,6 +2270,9 @@
       let lastGamepadServoTick = 0;
       let hornActive = false;
       let melodyActive = false;
+      let ambientAudioRequested = true;
+      let ambientAudioAwaitingGesture = false;
+      let ambientAudioUnlockArmed = false;
       let starfieldTwinkleTimer = null;
       let missionClockTimer = null;
       let spaceDriftTimer = null;
@@ -1918,6 +2284,7 @@
       let spaceWrapFadeTimer = null;
       let spaceWrapRestoreTimer = null;
       let spaceWrapActive = false;
+      let pendingFullscreenTransition = null;
 
       const GAMEPAD_STICK_DEADZONE = 0.18;
       const GAMEPAD_SERVO_DEADZONE = 0.22;
@@ -1926,6 +2293,9 @@
       const GAMEPAD_SERVO_STEP = 4;
       const GAMEPAD_SERVO_REPEAT_MS = 75;
       const GAMEPAD_TELEMETRY_SCROLL_STEP = 34;
+      const AMBIENT_AUDIO_VOLUME = 0.24;
+      const FULLSCREEN_TRANSITION_MS = 1300;
+      const FULLSCREEN_TRANSITION_EASING = 'cubic-bezier(0.22, 1, 0.36, 1)';
       const STREAM_COPY_DURATION_MULTIPLIER = 4;
       const STREAM_RETRY_MS = 4600 * STREAM_COPY_DURATION_MULTIPLIER;
       const STREAM_ERROR_RETRY_MS = 2400 * STREAM_COPY_DURATION_MULTIPLIER;
@@ -1942,6 +2312,7 @@
       const ROVER_CONTROL_URL = ROVER_BASE_URL + '/control';
       const ROVER_CAMERA_URL = ROVER_BASE_URL + ':81';
       const TELEMETRY_STREAM_URL = ROVER_BASE_URL + ':82/telemetry';
+      const DRIVE_MAP_CENTER = [-37.95323149737824, -57.570255709533605];
       const STARFIELD_FAR_COUNT = 108;
       const STARFIELD_NEAR_COUNT = 148;
       const STARFIELD_FAR_TWINKLE_COUNT = 2;
@@ -2007,8 +2378,279 @@
         stop: 'Control detenido'
       };
 
+      const DRIVE_VIEW_TRANSITION_MS = 500;
+      const DRIVE_VIEW_HEADER_SWAP_MS = DRIVE_VIEW_TRANSITION_MS / 2;
+      const DRIVE_VIEW_META = {
+        stick: {
+          kicker: 'Movimiento',
+          title: 'Stick principal'
+        },
+        map: {
+          kicker: 'Navegacion',
+          title: 'Mapa rover'
+        }
+      };
+      const DRIVE_VIEW_BUTTON_ICONS = {
+        map: `
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path
+              d="M3.5 6.5 8.5 4.5l7 2 5-2v13l-5 2-7-2-5 2z"
+              fill="none"
+              stroke="currentColor"
+              stroke-linejoin="round"
+              stroke-width="1.8"
+            />
+            <path
+              d="M8.5 4.5v13M15.5 6.5v13"
+              fill="none"
+              stroke="currentColor"
+              stroke-linejoin="round"
+              stroke-width="1.8"
+            />
+          </svg>
+        `,
+        stick: `
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <circle
+              cx="12"
+              cy="7"
+              r="3.2"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+            />
+            <path
+              d="M12 10.2v5.8"
+              fill="none"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-width="1.8"
+            />
+            <rect
+              x="5"
+              y="16"
+              width="14"
+              height="4"
+              rx="2"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+            />
+            <path
+              d="M8.2 18h.01M15.8 18h.01"
+              fill="none"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-width="2.2"
+            />
+          </svg>
+        `
+      };
+
       function setStatus(text) {
         statusPill.textContent = text;
+      }
+
+      function isAmbientAudioPlaying() {
+        return Boolean(ambientAudio && !ambientAudio.paused && !ambientAudio.ended);
+      }
+
+      function armAmbientAudioUnlock() {
+        if (!ambientAudioAwaitingGesture || ambientAudioUnlockArmed) {
+          return;
+        }
+
+        ambientAudioUnlockArmed = true;
+
+        const retryPlayback = async (event) => {
+          if (event && event.target && typeof event.target.closest === 'function' && event.target.closest('#ambientAudioToggle')) {
+            ambientAudioUnlockArmed = false;
+            document.removeEventListener('pointerdown', retryPlayback);
+            document.removeEventListener('keydown', retryPlayback);
+            document.removeEventListener('touchstart', retryPlayback);
+            return;
+          }
+
+          ambientAudioUnlockArmed = false;
+          document.removeEventListener('pointerdown', retryPlayback);
+          document.removeEventListener('keydown', retryPlayback);
+          document.removeEventListener('touchstart', retryPlayback);
+
+          if (!ambientAudioRequested) {
+            ambientAudioAwaitingGesture = false;
+            return;
+          }
+
+          try {
+            await ambientAudio.play();
+            ambientAudioAwaitingGesture = false;
+            syncAmbientAudioButton();
+          } catch (error) {
+            ambientAudioAwaitingGesture = true;
+            console.error(error);
+            syncAmbientAudioButton();
+            armAmbientAudioUnlock();
+          }
+        };
+
+        document.addEventListener('pointerdown', retryPlayback, { once: true });
+        document.addEventListener('keydown', retryPlayback, { once: true });
+        document.addEventListener('touchstart', retryPlayback, { once: true, passive: true });
+      }
+
+      function syncAmbientAudioButton() {
+        const playing = isAmbientAudioPlaying();
+        ambientAudioToggle.classList.toggle('is-active', playing);
+        ambientAudioToggle.title = playing ? 'Apagar audio ambiente' : 'Prender audio ambiente';
+        ambientAudioToggle.setAttribute(
+          'aria-label',
+          playing ? 'Apagar audio ambiente' : 'Prender audio ambiente'
+        );
+        ambientAudioToggleGlyph.innerHTML = playing
+          ? `
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path
+                d="M5 14h3.3l4.2 4.2V5.8L8.3 10H5z"
+                fill="none"
+                stroke="currentColor"
+                stroke-linejoin="round"
+                stroke-width="1.8"
+              />
+              <path
+                d="M16 9.2a4.2 4.2 0 0 1 0 5.6M18.6 6.8a7.6 7.6 0 0 1 0 10.4"
+                fill="none"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-width="1.8"
+              />
+            </svg>
+          `
+          : `
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path
+                d="M5 14h3.3l4.2 4.2V5.8L8.3 10H5z"
+                fill="none"
+                stroke="currentColor"
+                stroke-linejoin="round"
+                stroke-width="1.8"
+              />
+              <path
+                d="M16 9.4 19.8 13.2M19.8 9.4 16 13.2"
+                fill="none"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-width="1.8"
+              />
+            </svg>
+          `;
+      }
+
+      function applyDrivePanelHeading(view) {
+        const meta = DRIVE_VIEW_META[view] || DRIVE_VIEW_META.stick;
+        drivePanelKicker.textContent = meta.kicker;
+        drivePanelTitle.textContent = meta.title;
+      }
+
+      function transitionDrivePanelHeading(view) {
+        if (driveHeaderSwapTimer !== null) {
+          clearTimeout(driveHeaderSwapTimer);
+          driveHeaderSwapTimer = null;
+        }
+
+        driveHeaderCopy.classList.add('is-swapping');
+        driveHeaderSwapTimer = window.setTimeout(() => {
+          applyDrivePanelHeading(view);
+          driveHeaderCopy.classList.remove('is-swapping');
+          driveHeaderSwapTimer = null;
+        }, DRIVE_VIEW_HEADER_SWAP_MS);
+      }
+
+      function buildDriveMapIcon() {
+        if (typeof L === 'undefined') {
+          return null;
+        }
+
+        return L.divIcon({
+          className: 'rover-map-icon',
+          iconSize: [40, 40],
+          iconAnchor: [20, 28],
+          html: `
+            <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+              <circle cx="32" cy="10" r="6" fill="#f9d703" opacity="0.92" />
+              <rect x="14" y="22" width="36" height="18" rx="7" fill="#f9d703" stroke="#090909" stroke-width="3" />
+              <rect x="22" y="17" width="20" height="10" rx="4" fill="#fff4a0" stroke="#090909" stroke-width="3" />
+              <circle cx="20" cy="48" r="7" fill="#090909" stroke="#f9d703" stroke-width="3" />
+              <circle cx="44" cy="48" r="7" fill="#090909" stroke="#f9d703" stroke-width="3" />
+            </svg>
+          `
+        });
+      }
+
+      function ensureDriveMap() {
+        if (driveMap) {
+          return true;
+        }
+
+        if (typeof L === 'undefined') {
+          driveMapFallback.hidden = false;
+          driveMapFallback.textContent = 'Leaflet no disponible';
+          return false;
+        }
+
+        driveMap = L.map(driveMapCanvas, {
+          zoomControl: false,
+          scrollWheelZoom: true
+        }).setView(DRIVE_MAP_CENTER, 16);
+
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+          subdomains: 'abcd',
+          maxZoom: 20,
+          attribution: '&copy; OpenStreetMap &copy; CARTO'
+        }).addTo(driveMap);
+
+        driveMapMarker = L.marker(DRIVE_MAP_CENTER, {
+          icon: buildDriveMapIcon()
+        }).addTo(driveMap);
+
+        driveMapFallback.hidden = true;
+        return true;
+      }
+
+      function syncDrivePanelViewButton() {
+        const mapActive = activeDrivePanelView === 'map';
+        driveViewToggleButton.classList.toggle('is-active', mapActive);
+        driveViewToggleGlyph.innerHTML = mapActive ? DRIVE_VIEW_BUTTON_ICONS.stick : DRIVE_VIEW_BUTTON_ICONS.map;
+        driveViewToggleButton.title = mapActive ? 'Volver al stick' : 'Mostrar mapa';
+        driveViewToggleButton.setAttribute('aria-label', mapActive ? 'Volver al stick' : 'Mostrar mapa');
+        driveMapStage.setAttribute('aria-hidden', mapActive ? 'false' : 'true');
+      }
+
+      function setDrivePanelView(nextView) {
+        if (nextView !== 'stick' && nextView !== 'map') {
+          return;
+        }
+
+        if (activeDrivePanelView === nextView) {
+          return;
+        }
+
+        transitionDrivePanelHeading(nextView);
+        activeDrivePanelView = nextView;
+        drivePanel.dataset.view = activeDrivePanelView;
+        syncDrivePanelViewButton();
+
+        if (activeDrivePanelView === 'map' && ensureDriveMap()) {
+          window.setTimeout(() => {
+            driveMap.invalidateSize();
+            driveMap.setView(DRIVE_MAP_CENTER, driveMap.getZoom(), { animate: false });
+          }, 0);
+        }
+      }
+
+      function toggleDrivePanelView() {
+        const nextView = activeDrivePanelView === 'map' ? 'stick' : 'map';
+        setDrivePanelView(nextView);
+        setStatus(nextView === 'map' ? 'Mapa rover activo' : 'Stick principal activo');
       }
 
       function renderMissionClock(now = new Date()) {
@@ -2371,15 +3013,150 @@
         renderTelemetryConsole();
       }
 
+      function clearFullscreenPanelClasses(panel) {
+        if (!panel) {
+          return;
+        }
+
+        panel.classList.remove('is-fullscreen-animating', 'is-fullscreen-entering', 'is-fullscreen-exiting');
+      }
+
+      function queueFullscreenTransition(panel, direction) {
+        if (!panel) {
+          return;
+        }
+
+        if (pendingFullscreenTransition && pendingFullscreenTransition.panel !== panel) {
+          clearFullscreenPanelClasses(pendingFullscreenTransition.panel);
+        }
+
+        clearFullscreenPanelClasses(panel);
+        panel.classList.add('is-fullscreen-animating');
+        panel.classList.add(direction === 'enter' ? 'is-fullscreen-entering' : 'is-fullscreen-exiting');
+
+        pendingFullscreenTransition = {
+          panel,
+          direction,
+          rect: panel.getBoundingClientRect()
+        };
+      }
+
+      function getFullscreenMotionTarget(panel) {
+        if (panel === visionPanel) {
+          return panel.querySelector('.camera-stage');
+        }
+
+        if (panel === telemetryPanel) {
+          return panel.querySelector('.telemetry-console');
+        }
+
+        return null;
+      }
+
+      function playFullscreenTransition(transition) {
+        if (!transition || !transition.panel || typeof transition.panel.animate !== 'function') {
+          clearFullscreenPanelClasses(transition && transition.panel ? transition.panel : null);
+          return;
+        }
+
+        const { panel, rect: firstRect } = transition;
+        const lastRect = panel.getBoundingClientRect();
+
+        if (!firstRect || !lastRect.width || !lastRect.height) {
+          clearFullscreenPanelClasses(panel);
+          return;
+        }
+
+        const translateX = firstRect.left - lastRect.left;
+        const translateY = firstRect.top - lastRect.top;
+        const scaleX = firstRect.width / lastRect.width;
+        const scaleY = firstRect.height / lastRect.height;
+
+        panel.getAnimations().forEach((animation) => animation.cancel());
+
+        const panelAnimation = panel.animate(
+          [
+            {
+              transformOrigin: 'top left',
+              transform: `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`,
+              opacity: 0.88,
+              filter: 'brightness(0.9) saturate(0.94)'
+            },
+            {
+              transformOrigin: 'top left',
+              transform: 'translate(0px, 0px) scale(1, 1)',
+              opacity: 1,
+              filter: 'brightness(1) saturate(1)'
+            }
+          ],
+          {
+            duration: FULLSCREEN_TRANSITION_MS,
+            easing: FULLSCREEN_TRANSITION_EASING,
+            fill: 'both'
+          }
+        );
+
+        const motionTarget = getFullscreenMotionTarget(panel);
+        if (motionTarget && typeof motionTarget.animate === 'function') {
+          motionTarget.getAnimations().forEach((animation) => animation.cancel());
+          motionTarget.animate(
+            [
+              {
+                opacity: 0.76,
+                transform: 'translateY(12px) scale(0.985)',
+                filter: 'blur(6px)'
+              },
+              {
+                opacity: 1,
+                transform: 'translateY(0px) scale(1)',
+                filter: 'blur(0px)'
+              }
+            ],
+            {
+              duration: FULLSCREEN_TRANSITION_MS + 50,
+              easing: FULLSCREEN_TRANSITION_EASING,
+              fill: 'both'
+            }
+          );
+        }
+
+        panelAnimation.addEventListener('finish', () => {
+          clearFullscreenPanelClasses(panel);
+        }, { once: true });
+
+        panelAnimation.addEventListener('cancel', () => {
+          clearFullscreenPanelClasses(panel);
+        }, { once: true });
+      }
+
+      function flushPendingFullscreenTransition() {
+        if (!pendingFullscreenTransition) {
+          return;
+        }
+
+        const transition = pendingFullscreenTransition;
+        pendingFullscreenTransition = null;
+
+        window.requestAnimationFrame(() => {
+          window.requestAnimationFrame(() => {
+            playFullscreenTransition(transition);
+          });
+        });
+      }
+
       async function toggleTelemetryFullscreen() {
         try {
           if (isTelemetryFullscreenActive()) {
+            queueFullscreenTransition(telemetryPanel, 'exit');
             await document.exitFullscreen();
             return;
           }
 
+          queueFullscreenTransition(telemetryPanel, 'enter');
           await telemetryPanel.requestFullscreen();
         } catch (error) {
+          pendingFullscreenTransition = null;
+          clearFullscreenPanelClasses(telemetryPanel);
           console.error(error);
           setStatus('No se pudo abrir telemetria fullscreen');
         }
@@ -2388,12 +3165,16 @@
       async function toggleCameraFullscreen() {
         try {
           if (isCameraFullscreenActive()) {
+            queueFullscreenTransition(visionPanel, 'exit');
             await document.exitFullscreen();
             return;
           }
 
+          queueFullscreenTransition(visionPanel, 'enter');
           await visionPanel.requestFullscreen();
         } catch (error) {
+          pendingFullscreenTransition = null;
+          clearFullscreenPanelClasses(visionPanel);
           console.error(error);
           setStatus('No se pudo abrir camara fullscreen');
         }
@@ -3044,6 +3825,49 @@
         return true;
       }
 
+      async function setAmbientAudioState(nextState, sourceLabel, options = {}) {
+        if (!ambientAudio) {
+          return false;
+        }
+
+        const silent = Boolean(options.silent);
+        ambientAudioRequested = nextState;
+
+        if (nextState) {
+          ambientAudio.volume = AMBIENT_AUDIO_VOLUME;
+          try {
+            await ambientAudio.play();
+            ambientAudioAwaitingGesture = false;
+          } catch (error) {
+            ambientAudioAwaitingGesture = true;
+            syncAmbientAudioButton();
+            armAmbientAudioUnlock();
+            console.error(error);
+            if (!silent) {
+              setStatus('Interactua para activar audio ambiente');
+            }
+            return false;
+          }
+        } else {
+          ambientAudio.pause();
+          ambientAudioAwaitingGesture = false;
+        }
+
+        syncAmbientAudioButton();
+        if (!silent) {
+          setStatus(sourceLabel || (nextState ? 'Audio ambiente activo' : 'Audio ambiente inactivo'));
+        }
+        return true;
+      }
+
+      function getNextAmbientAudioState() {
+        if (ambientAudioRequested && (ambientAudioAwaitingGesture || !isAmbientAudioPlaying())) {
+          return true;
+        }
+
+        return !ambientAudioRequested;
+      }
+
       function resolveDirection(dx, dy, distance, maxDistance) {
         if (distance < maxDistance * 0.22) {
           return 'stop';
@@ -3170,6 +3994,14 @@
 
       torchToggle.addEventListener('click', async () => {
         await setTorchState(!torchEnabled);
+      });
+
+      ambientAudioToggle.addEventListener('click', async () => {
+        const nextState = getNextAmbientAudioState();
+        await setAmbientAudioState(
+          nextState,
+          nextState ? 'Audio ambiente activo' : 'Audio ambiente inactivo'
+        );
       });
 
       ['pointerdown'].forEach((type) => {
@@ -3341,8 +4173,11 @@
         const yPressed = readGamepadButton(gamepad, 3);
         const ltPressed = readGamepadButton(gamepad, 6);
         const rtPressed = readGamepadButton(gamepad, 7);
+        const startPressed = readGamepadButton(gamepad, 9);
         const telemetryTogglePressed = ltPressed && aPressed;
         const telemetryToggleWasPressed = Boolean(lastGamepadButtons[6] && lastGamepadButtons[0]);
+        const driveMapTogglePressed = ltPressed && bPressed;
+        const driveMapToggleWasPressed = Boolean(lastGamepadButtons[6] && lastGamepadButtons[1]);
         const streamTogglePressed = ltPressed && xPressed;
         const streamToggleWasPressed = Boolean(lastGamepadButtons[6] && lastGamepadButtons[2]);
         const cameraTogglePressed = ltPressed && yPressed;
@@ -3357,6 +4192,10 @@
 
         if (streamTogglePressed && !streamToggleWasPressed) {
           toggleStreamMode();
+        }
+
+        if (driveMapTogglePressed && !driveMapToggleWasPressed) {
+          toggleDrivePanelView();
         }
 
         if (cameraTogglePressed && !cameraToggleWasPressed) {
@@ -3377,13 +4216,21 @@
           setTorchState(!torchEnabled, !torchEnabled ? 'Luz frontal encendida' : 'Luz frontal apagada');
         }
 
-        if (bPressed && !lastGamepadButtons[1]) {
+        if (!ltPressed && bPressed && !lastGamepadButtons[1]) {
           activateModeButton(standbyModeButton);
         }
 
         if (rtPressed && !lastGamepadButtons[7]) {
           pulseButton(photoButton);
           snapshotFromLiveFrame();
+        }
+
+        if (startPressed && !lastGamepadButtons[9]) {
+          const nextState = getNextAmbientAudioState();
+          setAmbientAudioState(
+            nextState,
+            nextState ? 'Audio ambiente activo' : 'Audio ambiente inactivo'
+          );
         }
       }
 
@@ -3465,6 +4312,9 @@
         ensureMissionClock();
         ensureSpaceDriftLoop();
         scheduleStarfieldTwinkle();
+        if (ambientAudioRequested && !isAmbientAudioPlaying()) {
+          setAmbientAudioState(true, '', { silent: true });
+        }
         if (telemetryWaitingVisible) {
           startTelemetryWaitingAnimation(telemetryWaitingMessage);
         }
@@ -3472,14 +4322,28 @@
           ensureGamepadLoop();
         }
       });
+      ambientAudio.addEventListener('play', syncAmbientAudioButton);
+      ambientAudio.addEventListener('pause', syncAmbientAudioButton);
       updateNumericDisplays();
+      ambientAudio.volume = AMBIENT_AUDIO_VOLUME;
+      syncAmbientAudioButton();
+      setAmbientAudioState(true, '', { silent: true });
       connectTelemetryStream();
       setCameraVisual('stream');
+      applyDrivePanelHeading(activeDrivePanelView);
+      syncDrivePanelViewButton();
+      driveViewToggleButton.addEventListener('click', toggleDrivePanelView);
       cameraFullscreenButton.addEventListener('click', toggleCameraFullscreen);
       telemetryFullscreenButton.addEventListener('click', toggleTelemetryFullscreen);
       document.addEventListener('fullscreenchange', () => {
+        flushPendingFullscreenTransition();
         syncCameraFullscreenState();
         syncTelemetryFullscreenState();
+      });
+      document.addEventListener('fullscreenerror', () => {
+        pendingFullscreenTransition = null;
+        clearFullscreenPanelClasses(visionPanel);
+        clearFullscreenPanelClasses(telemetryPanel);
       });
       syncCameraFullscreenState();
       syncTelemetryFullscreenState();
