@@ -295,6 +295,9 @@
 
       .brand-copy {
         min-width: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
       }
 
       .eyebrow {
@@ -310,12 +313,13 @@
 
       .brand-title {
         font-family: var(--font-display);
-        font-size: clamp(1.45rem, 3vw, 2.3rem);
-        line-height: 0.95;
-        letter-spacing: 0.08em;
+        font-size: clamp(1.18rem, 2.15vw, 2.05rem);
+        line-height: 1;
+        letter-spacing: 0.06em;
         color: var(--gold);
         text-transform: uppercase;
         font-weight: 800;
+        white-space: nowrap;
       }
 
       .brand-title .luca-pill {
@@ -334,6 +338,7 @@
 
       .status-pill {
         margin-top: 8px;
+        align-self: flex-start;
         display: inline-flex;
         align-items: center;
         gap: 8px;
@@ -618,6 +623,7 @@
       .drive-map-canvas {
         width: 100%;
         height: 100%;
+        pointer-events: none;
       }
 
       .drive-map-stage .leaflet-container {
@@ -625,6 +631,7 @@
         height: 100%;
         background: #05070b;
         font: inherit;
+        pointer-events: none;
       }
 
       .drive-map-stage .leaflet-control-attribution {
@@ -1758,6 +1765,32 @@
         object-fit: contain;
       }
 
+      @media (max-width: 1240px) {
+        .topbar {
+          flex-wrap: wrap;
+        }
+
+        .topbar-actions {
+          width: 100%;
+          align-items: flex-start;
+        }
+
+        .camera-actions {
+          width: 100%;
+          justify-content: flex-start;
+        }
+
+        .mission-clock {
+          align-self: flex-start;
+          padding-right: 0;
+          padding-left: 2px;
+        }
+
+        .mission-clock-value {
+          text-align: left;
+        }
+      }
+
       @media (max-width: 940px), (orientation: portrait) {
         body {
           overflow: auto;
@@ -1790,6 +1823,10 @@
 
         .mission-clock-value {
           text-align: left;
+        }
+
+        .brand-title {
+          font-size: clamp(1rem, 4.4vw, 1.45rem);
         }
 
         .main-grid {
@@ -2297,6 +2334,7 @@
       const FULLSCREEN_TRANSITION_MS = 1300;
       const FULLSCREEN_TRANSITION_EASING = 'cubic-bezier(0.22, 1, 0.36, 1)';
       const STREAM_COPY_DURATION_MULTIPLIER = 4;
+      const STREAM_READY_LOAD_COUNT = 2;
       const STREAM_RETRY_MS = 4600 * STREAM_COPY_DURATION_MULTIPLIER;
       const STREAM_ERROR_RETRY_MS = 2400 * STREAM_COPY_DURATION_MULTIPLIER;
       const STREAM_STALL_MS = 5600 * STREAM_COPY_DURATION_MULTIPLIER;
@@ -2599,7 +2637,13 @@
 
         driveMap = L.map(driveMapCanvas, {
           zoomControl: false,
-          scrollWheelZoom: true
+          scrollWheelZoom: false,
+          dragging: false,
+          touchZoom: false,
+          doubleClickZoom: false,
+          boxZoom: false,
+          keyboard: false,
+          tap: false
         }).setView(DRIVE_MAP_CENTER, 16);
 
         L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
@@ -3250,6 +3294,16 @@
         }
       }
 
+      function isStreamReady() {
+        return (
+          camera.dataset.mode === 'stream' &&
+          streamLoadCount >= STREAM_READY_LOAD_COUNT &&
+          cameraStage.classList.contains('has-video') &&
+          camera.classList.contains('is-visible') &&
+          cameraPlaceholder.hidden
+        );
+      }
+
       function clearTelemetryAliveWatch() {
         if (telemetryAliveTimer) {
           clearTimeout(telemetryAliveTimer);
@@ -3309,12 +3363,12 @@
 
       function scheduleStreamStallWatch() {
         clearStreamStall();
-        if (streamLoadCount < 2) {
+        if (streamLoadCount < STREAM_READY_LOAD_COUNT) {
           return;
         }
 
         streamStallTimer = setTimeout(() => {
-          if (camera.dataset.mode !== 'stream' || !cameraStage.classList.contains('has-video')) {
+          if (!isStreamReady()) {
             return;
           }
 
@@ -3325,7 +3379,7 @@
       function scheduleStreamRetry(message, delay = STREAM_RETRY_MS) {
         clearStreamRetry();
         streamRetryTimer = setTimeout(() => {
-          if (camera.dataset.mode !== 'stream' || cameraStage.classList.contains('has-video')) {
+          if (camera.dataset.mode !== 'stream' || isStreamReady()) {
             return;
           }
 
@@ -3354,10 +3408,11 @@
       function scheduleStreamFallback() {
         clearStreamFallback();
         streamFallbackTimer = setTimeout(() => {
-          if (camera.dataset.mode !== 'stream' || camera.naturalWidth > 0) {
+          if (camera.dataset.mode !== 'stream' || isStreamReady()) {
             return;
           }
 
+          cameraStage.classList.remove('has-video');
           camera.classList.remove('is-visible');
           setVideoSearchState(true);
           setPlaceholderState('Buscando video', 'Seguimos esperando el stream de UCA. Revisa la conexion Wi-Fi o reinicia la camara.');
@@ -3478,22 +3533,35 @@
       }
 
       camera.addEventListener('load', () => {
-        clearStreamFallback();
-        clearStreamRetry();
         clearStreamStall();
         clearPlaceholderSwap();
         cameraPlaceholder.classList.remove('is-copy-updating');
+
+        if (camera.dataset.mode !== 'stream') {
+          return;
+        }
+
+        streamLoadCount += 1;
+
+        if (streamLoadCount < STREAM_READY_LOAD_COUNT) {
+          cameraStage.classList.remove('has-video');
+          camera.classList.remove('is-visible');
+          setVideoSearchState(true);
+          cameraPlaceholder.hidden = false;
+          feedBadge.textContent = 'Off';
+          feedBadge.classList.remove('live');
+          return;
+        }
+
+        clearStreamFallback();
+        clearStreamRetry();
         cameraStage.classList.add('has-video');
         camera.classList.add('is-visible');
         setVideoSearchState(false);
-
-        if (camera.dataset.mode === 'stream') {
-          streamLoadCount += 1;
-          scheduleStreamStallWatch();
-          cameraPlaceholder.hidden = true;
-          feedBadge.textContent = 'Live';
-          feedBadge.classList.add('live');
-        }
+        cameraPlaceholder.hidden = true;
+        feedBadge.textContent = 'Live';
+        feedBadge.classList.add('live');
+        scheduleStreamStallWatch();
       });
 
       camera.addEventListener('error', () => {
