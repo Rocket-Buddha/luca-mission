@@ -91,6 +91,7 @@ Usar:
 - Si se toca `esp32-camera/app_httpd.cpp`, mantener compatibilidad con el core `esp32` actual.
 - `esp32-camera` debe quedar como backend del rover. No volver a embutir la UI HTML completa dentro del firmware.
 - La UI oficial vive en `mission-control-ui`.
+- En `mission-control-ui`, el acople entre telemetria y video es deliberado: si se pierde el heartbeat SSE de telemetria, el panel debe asumir tambien la perdida de video y pasar a estado `Buscando senal` para evitar que quede un frame clavado.
 - Si se toca `esp32-body`, conservar los includes locales:
   - `ACB_SmartCar_V2.h`
   - `ultrasonic.h`

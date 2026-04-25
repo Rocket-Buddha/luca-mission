@@ -2334,7 +2334,6 @@
       const FULLSCREEN_TRANSITION_MS = 1300;
       const FULLSCREEN_TRANSITION_EASING = 'cubic-bezier(0.22, 1, 0.36, 1)';
       const STREAM_COPY_DURATION_MULTIPLIER = 4;
-      const STREAM_READY_LOAD_COUNT = 2;
       const STREAM_RETRY_MS = 4600 * STREAM_COPY_DURATION_MULTIPLIER;
       const STREAM_ERROR_RETRY_MS = 2400 * STREAM_COPY_DURATION_MULTIPLIER;
       const STREAM_STALL_MS = 5600 * STREAM_COPY_DURATION_MULTIPLIER;
@@ -3294,16 +3293,6 @@
         }
       }
 
-      function isStreamReady() {
-        return (
-          camera.dataset.mode === 'stream' &&
-          streamLoadCount >= STREAM_READY_LOAD_COUNT &&
-          cameraStage.classList.contains('has-video') &&
-          camera.classList.contains('is-visible') &&
-          cameraPlaceholder.hidden
-        );
-      }
-
       function clearTelemetryAliveWatch() {
         if (telemetryAliveTimer) {
           clearTimeout(telemetryAliveTimer);
@@ -3311,21 +3300,22 @@
         }
       }
 
-      function showVideoSearchingState(message) {
+      function showSignalSearchingState(message) {
         clearStreamFallback();
+        clearStreamRetry();
         clearStreamStall();
         streamLoadCount = 0;
         cameraStage.classList.remove('has-video');
         camera.classList.remove('is-visible');
         setVideoSearchState(true);
-        setPlaceholderState('Buscando video', message || 'Esperando el stream de UCA.');
+        setPlaceholderState('Buscando senal', message || 'Sin heartbeat de telemetria. Reintentando el enlace de video.');
         cameraPlaceholder.hidden = false;
         camera.removeAttribute('src');
         feedBadge.textContent = 'Off';
         feedBadge.classList.remove('live');
       }
 
-      function handleTelemetryDisconnect(message) {
+      function handleTelemetryDisconnect() {
         startTelemetryWaitingAnimation('Reconectando telemetria de UCA');
         setBatteryTelemetryLinkState('offline');
         resetBatterySnapshot();
@@ -3334,41 +3324,39 @@
         }
 
         telemetryOfflineState = true;
-        handleTelemetryOffline(message || 'Buscando video. Se perdio el enlace con UCA.');
-      }
-
-      function handleTelemetryOffline(message) {
-        if (camera.dataset.mode !== 'stream') {
-          return;
+        if (camera.dataset.mode === 'stream') {
+          showSignalSearchingState('Sin heartbeat de telemetria de UCA. Reintentando el stream.');
+          scheduleStreamRetry('Reintentando el stream de UCA...', STREAM_ERROR_RETRY_MS);
         }
-
-        showVideoSearchingState(message || 'Buscando video. La camara de UCA dejo de responder.');
-        scheduleStreamRetry('Reintentando el stream de UCA...', STREAM_ERROR_RETRY_MS);
       }
 
       function markTelemetryAlive() {
+        const wasOffline = telemetryOfflineState;
         telemetryOfflineState = false;
         setBatteryTelemetryLinkState('online');
         lastTelemetryAliveAt = Date.now();
         clearTelemetryAliveWatch();
+        if (wasOffline && camera.dataset.mode === 'stream' && !cameraStage.classList.contains('has-video')) {
+          beginStreamRequest('Esperando el stream de UCA.');
+        }
         telemetryAliveTimer = setTimeout(() => {
           telemetryAliveTimer = null;
           if (Date.now() - lastTelemetryAliveAt < TELEMETRY_OFFLINE_TIMEOUT_MS) {
             return;
           }
 
-          handleTelemetryDisconnect('Buscando video. Se perdio el enlace con UCA.');
+          handleTelemetryDisconnect();
         }, TELEMETRY_OFFLINE_TIMEOUT_MS);
       }
 
       function scheduleStreamStallWatch() {
         clearStreamStall();
-        if (streamLoadCount < STREAM_READY_LOAD_COUNT) {
+        if (streamLoadCount < 2) {
           return;
         }
 
         streamStallTimer = setTimeout(() => {
-          if (!isStreamReady()) {
+          if (camera.dataset.mode !== 'stream' || !cameraStage.classList.contains('has-video')) {
             return;
           }
 
@@ -3379,7 +3367,7 @@
       function scheduleStreamRetry(message, delay = STREAM_RETRY_MS) {
         clearStreamRetry();
         streamRetryTimer = setTimeout(() => {
-          if (camera.dataset.mode !== 'stream' || isStreamReady()) {
+          if (camera.dataset.mode !== 'stream' || cameraStage.classList.contains('has-video')) {
             return;
           }
 
@@ -3408,7 +3396,7 @@
       function scheduleStreamFallback() {
         clearStreamFallback();
         streamFallbackTimer = setTimeout(() => {
-          if (camera.dataset.mode !== 'stream' || isStreamReady()) {
+          if (camera.dataset.mode !== 'stream' || camera.naturalWidth > 0) {
             return;
           }
 
@@ -3513,8 +3501,6 @@
         if (mode === 'stream') {
           beginStreamRequest('Esperando el stream de UCA.');
         } else {
-          setBatteryTelemetryLinkState('awaiting');
-          resetBatterySnapshot();
           cameraStage.classList.remove('has-video');
           camera.classList.remove('is-visible');
           setVideoSearchState(false);
@@ -3533,6 +3519,8 @@
       }
 
       camera.addEventListener('load', () => {
+        clearStreamFallback();
+        clearStreamRetry();
         clearStreamStall();
         clearPlaceholderSwap();
         cameraPlaceholder.classList.remove('is-copy-updating');
@@ -3541,27 +3529,14 @@
           return;
         }
 
-        streamLoadCount += 1;
-
-        if (streamLoadCount < STREAM_READY_LOAD_COUNT) {
-          cameraStage.classList.remove('has-video');
-          camera.classList.remove('is-visible');
-          setVideoSearchState(true);
-          cameraPlaceholder.hidden = false;
-          feedBadge.textContent = 'Off';
-          feedBadge.classList.remove('live');
-          return;
-        }
-
-        clearStreamFallback();
-        clearStreamRetry();
         cameraStage.classList.add('has-video');
         camera.classList.add('is-visible');
         setVideoSearchState(false);
+        streamLoadCount += 1;
+        scheduleStreamStallWatch();
         cameraPlaceholder.hidden = true;
         feedBadge.textContent = 'Live';
         feedBadge.classList.add('live');
-        scheduleStreamStallWatch();
       });
 
       camera.addEventListener('error', () => {
@@ -3714,7 +3689,7 @@
 
         telemetrySource.onerror = () => {
           clearTelemetryAliveWatch();
-          handleTelemetryDisconnect('Buscando video. Se perdio el enlace con UCA.');
+          handleTelemetryDisconnect();
         };
       }
 
