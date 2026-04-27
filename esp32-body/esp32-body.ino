@@ -20,8 +20,8 @@
 #define CMD_RUN 1
 #define CMD_GET 2
 #define CMD_STANDBY 3
-#define CMD_TRACK_1 4
-#define CMD_TRACK_2 5
+#define CMD_TRACK_LEGACY 4
+#define CMD_TRACK 5
 #define CMD_AVOID 6
 #define CMD_FOLLOW 7
 
@@ -73,8 +73,13 @@ Servo turnServo;       //Adjustable steering gear
 int Left_Tra_Value;
 int Middle_Tra_Value;
 int Right_Tra_Value;
-int Black_Line = 2000;
-int Off_Road = 4000;
+const int kTrackLeftOnThreshold = 185;
+const int kTrackLeftOffThreshold = 176;
+const int kTrackMiddleOnThreshold = 198;
+const int kTrackMiddleOffThreshold = 190;
+const int kTrackRightOnThreshold = 1020;
+const int kTrackRightOffThreshold = 1000;
+const uint8_t kTrackSensorSampleCount = 4;
 int speeds = 250;
 int leftDistance = 0;
 int middleDistance = 0;
@@ -276,8 +281,7 @@ void updateBatteryTelemetry() {
 enum FUNCTION_MODE {
   STANDBY,
   FOLLOW,
-  TRACK_1,
-  TRACK_2,
+  TRACK,
   AVOID,
 } function_mode = STANDBY;
 
@@ -287,10 +291,8 @@ const char *functionModeName(int mode) {
       return "STANDBY";
     case FOLLOW:
       return "FOLLOW";
-    case TRACK_1:
-      return "TRACK_1";
-    case TRACK_2:
-      return "TRACK_2";
+    case TRACK:
+      return "TRACK";
     case AVOID:
       return "AVOID";
     default:
@@ -364,14 +366,9 @@ void functionMode() {
         model3_func();  // Enter the follow mode and call the model3_func() function
       }
       break;
-    case TRACK_1:
+    case TRACK:
       {
-        model1_func();  // Enter tracking mode 1 and call the model1_func() function
-      }
-      break;
-    case TRACK_2:
-      {
-        model4_func();  // Enter tracking mode 2 and call the model4_func() function
+        trackMode3Sensor();  // Enter the 3-sensor tracking mode.
       }
       break;
     case AVOID:
@@ -386,6 +383,21 @@ void functionMode() {
 
 void Receive_data()  // Receive data
 {
+}
+
+int readTrackSensorAverage(uint8_t pin) {
+  uint32_t total = 0;
+  for (uint8_t sampleIndex = 0; sampleIndex < kTrackSensorSampleCount; sampleIndex++) {
+    total += analogRead(pin);
+  }
+  return static_cast<int>(total / kTrackSensorSampleCount);
+}
+
+bool trackSensorOnLine(int value, bool latchedOnLine, int onThreshold, int offThreshold) {
+  if (latchedOnLine) {
+    return value >= offThreshold;
+  }
+  return value >= onThreshold;
 }
 
 void model2_func()  // OA
@@ -471,49 +483,150 @@ void model3_func()  // follow model
   }
 }
 
-void model4_func()  // tracking model2
+void trackMode3Sensor()
 {
   static unsigned long lastTelemetryMs = 0;
+  static unsigned long lastLineSeenMs = 0;
+  static bool leftLatchedOnLine = false;
+  static bool middleLatchedOnLine = false;
+  static bool rightLatchedOnLine = false;
+  static int lastLineDirection = 0;
+  static bool correctionActive = false;
+  static bool correctionTurning = false;
+  static int correctionDirection = 0;
+  static unsigned long correctionPhaseStartedMs = 0;
+  static unsigned long correctionTurnDurationMs = 0;
+  const unsigned long lineRecoveryWindowMs = 260;
+  const unsigned long correctionBrakeMs = 70;
+  const unsigned long softCorrectionTurnMs = 90;
+  const unsigned long hardCorrectionTurnMs = 130;
   const int straightLeftSpeed = 180;
   const int straightRightSpeed = 180;
-  const int softTurnInnerSpeed = 150;
-  const int softTurnOuterSpeed = 210;
-  const int hardTurnInnerSpeed = 110;
-  const int hardTurnOuterSpeed = 220;
+  const int softCorrectionSpinSpeed = 190;
+  const int hardCorrectionSpinSpeed = 200;
+  const int recoverySpinSpeed = 170;
+  const int recoveryStraightSpeed = 150;
   const char *actionLabel = "straight";
+  const unsigned long now = millis();
 
   fixedServo.write(90);
-  Left_Tra_Value = analogRead(Left_sensor);
-  Middle_Tra_Value = analogRead(Middle_sensor);
-  Right_Tra_Value = analogRead(Right_sensor);
-  delay(5);
+  Left_Tra_Value = readTrackSensorAverage(Left_sensor);
+  Middle_Tra_Value = readTrackSensorAverage(Middle_sensor);
+  Right_Tra_Value = readTrackSensorAverage(Right_sensor);
 
-  bool leftOnLine = Left_Tra_Value >= Black_Line;
-  bool middleOnLine = Middle_Tra_Value >= Black_Line;
-  bool rightOnLine = Right_Tra_Value >= Black_Line;
-  bool allOffRoad = Left_Tra_Value >= Off_Road && Middle_Tra_Value >= Off_Road && Right_Tra_Value >= Off_Road;
+  bool leftOnLine = trackSensorOnLine(
+    Left_Tra_Value,
+    leftLatchedOnLine,
+    kTrackLeftOnThreshold,
+    kTrackLeftOffThreshold
+  );
+  bool middleOnLine = trackSensorOnLine(
+    Middle_Tra_Value,
+    middleLatchedOnLine,
+    kTrackMiddleOnThreshold,
+    kTrackMiddleOffThreshold
+  );
+  bool rightOnLine = trackSensorOnLine(
+    Right_Tra_Value,
+    rightLatchedOnLine,
+    kTrackRightOnThreshold,
+    kTrackRightOffThreshold
+  );
 
-  if (allOffRoad) {
-    actionLabel = "off-road-stop";
-    Acebott.Move(Stop, 0);
-  } else if (!leftOnLine && !middleOnLine && !rightOnLine) {
-    // Lost the line completely: stop instead of keeping the last turn/drive command.
-    actionLabel = "line-lost-stop";
-    Acebott.Move(Stop, 0);
-  } else if (leftOnLine && !middleOnLine && !rightOnLine) {
-    actionLabel = "hard-left-trim";
-    Acebott.DriveSides(hardTurnInnerSpeed, hardTurnOuterSpeed);
-  } else if (!leftOnLine && !middleOnLine && rightOnLine) {
-    actionLabel = "hard-right-trim";
-    Acebott.DriveSides(hardTurnOuterSpeed, hardTurnInnerSpeed);
-  } else if (leftOnLine && middleOnLine && !rightOnLine) {
-    actionLabel = "soft-left-trim";
-    Acebott.DriveSides(softTurnInnerSpeed, softTurnOuterSpeed);
-  } else if (!leftOnLine && middleOnLine && rightOnLine) {
-    actionLabel = "soft-right-trim";
-    Acebott.DriveSides(softTurnOuterSpeed, softTurnInnerSpeed);
+  leftLatchedOnLine = leftOnLine;
+  middleLatchedOnLine = middleOnLine;
+  rightLatchedOnLine = rightOnLine;
+
+  const uint8_t linePattern =
+    (leftOnLine ? 0b100 : 0) |
+    (middleOnLine ? 0b010 : 0) |
+    (rightOnLine ? 0b001 : 0);
+
+  const bool centeredPattern = linePattern == 0b010 || linePattern == 0b101 || linePattern == 0b111;
+  const bool leftCorrectionPattern = linePattern == 0b100 || linePattern == 0b110;
+  const bool rightCorrectionPattern = linePattern == 0b001 || linePattern == 0b011;
+  const bool hardCorrectionPattern = linePattern == 0b100 || linePattern == 0b001;
+
+  if (centeredPattern) {
+    correctionActive = false;
+    correctionTurning = false;
+    correctionDirection = 0;
+    correctionTurnDurationMs = 0;
+    lastLineSeenMs = now;
+    lastLineDirection = 0;
+    actionLabel = "straight";
+    Acebott.DriveSides(straightLeftSpeed, straightRightSpeed);
+  } else if (leftCorrectionPattern || rightCorrectionPattern) {
+    const int requestedDirection = leftCorrectionPattern ? -1 : 1;
+    const unsigned long requestedTurnDurationMs = hardCorrectionPattern ? hardCorrectionTurnMs : softCorrectionTurnMs;
+
+    lastLineSeenMs = now;
+    lastLineDirection = requestedDirection;
+
+    if (!correctionActive ||
+        correctionDirection != requestedDirection ||
+        correctionTurnDurationMs != requestedTurnDurationMs) {
+      correctionActive = true;
+      correctionTurning = false;
+      correctionDirection = requestedDirection;
+      correctionPhaseStartedMs = now;
+      correctionTurnDurationMs = requestedTurnDurationMs;
+    }
+
+    if (!correctionTurning && now - correctionPhaseStartedMs < correctionBrakeMs) {
+      actionLabel = correctionDirection < 0 ? "brake-left" : "brake-right";
+      Acebott.Move(Stop, 0);
+    } else {
+      if (!correctionTurning) {
+        correctionTurning = true;
+        correctionPhaseStartedMs = now;
+      }
+
+      if (now - correctionPhaseStartedMs < correctionTurnDurationMs) {
+        if (correctionDirection < 0) {
+          actionLabel = hardCorrectionPattern ? "correct-hard-left" : "correct-soft-left";
+          Acebott.Move(
+            Contrarotate,
+            hardCorrectionPattern ? hardCorrectionSpinSpeed : softCorrectionSpinSpeed
+          );
+        } else {
+          actionLabel = hardCorrectionPattern ? "correct-hard-right" : "correct-soft-right";
+          Acebott.Move(
+            Clockwise,
+            hardCorrectionPattern ? hardCorrectionSpinSpeed : softCorrectionSpinSpeed
+          );
+        }
+      } else {
+        correctionActive = false;
+        correctionTurning = false;
+        actionLabel = "straight";
+        Acebott.DriveSides(straightLeftSpeed, straightRightSpeed);
+      }
+    }
+  } else if (linePattern == 0b000) {
+    correctionActive = false;
+    correctionTurning = false;
+    if (lastLineSeenMs != 0 && now - lastLineSeenMs <= lineRecoveryWindowMs) {
+      if (lastLineDirection < 0) {
+        actionLabel = "recover-left";
+        Acebott.Move(Contrarotate, recoverySpinSpeed);
+      } else if (lastLineDirection > 0) {
+        actionLabel = "recover-right";
+        Acebott.Move(Clockwise, recoverySpinSpeed);
+      } else {
+        actionLabel = "recover-straight";
+        Acebott.DriveSides(recoveryStraightSpeed, recoveryStraightSpeed);
+      }
+    } else {
+      // After a short recovery window, stop instead of running blind.
+      actionLabel = "line-lost-stop";
+      Acebott.Move(Stop, 0);
+    }
   } else {
-    // Centered, partial overlap, or crossing/intersection patterns keep moving ahead.
+    correctionActive = false;
+    correctionTurning = false;
+    lastLineSeenMs = now;
+    lastLineDirection = 0;
     actionLabel = "straight";
     Acebott.DriveSides(straightLeftSpeed, straightRightSpeed);
   }
@@ -521,7 +634,7 @@ void model4_func()  // tracking model2
   if (millis() - lastTelemetryMs >= 250) {
     lastTelemetryMs = millis();
     telemetryPrintf(
-      "TRACK2",
+      "TRACK",
       "L=%d M=%d R=%d line=%d%d%d action=%s",
       Left_Tra_Value,
       Middle_Tra_Value,
@@ -529,56 +642,6 @@ void model4_func()  // tracking model2
       leftOnLine ? 1 : 0,
       middleOnLine ? 1 : 0,
       rightOnLine ? 1 : 0,
-      actionLabel
-    );
-  }
-}
-
-void model1_func()  // tracking model1
-{
-  static unsigned long lastTelemetryMs = 0;
-  const int straightLeftSpeed = 180;
-  const int straightRightSpeed = 180;
-  const int turnInnerSpeed = 120;
-  const int turnOuterSpeed = 200;
-  const char *actionLabel = "straight";
-
-  fixedServo.write(90);
-  Left_Tra_Value = analogRead(Left_sensor);
-  Right_Tra_Value = analogRead(Right_sensor);
-  delay(5);
-
-  bool leftTriggered = Left_Tra_Value >= Black_Line;
-  bool rightTriggered = Right_Tra_Value >= Black_Line;
-  bool bothOffRoad = Left_Tra_Value >= Off_Road && Right_Tra_Value >= Off_Road;
-
-  if (bothOffRoad) {
-    actionLabel = "off-road-stop";
-    Acebott.Move(Stop, 0);
-  } else if (!leftTriggered && !rightTriggered) {
-    actionLabel = "straight";
-    Acebott.DriveSides(straightLeftSpeed, straightRightSpeed);
-  } else if (leftTriggered && !rightTriggered) {
-    actionLabel = "left-trim";
-    Acebott.DriveSides(turnInnerSpeed, turnOuterSpeed);
-  } else if (!leftTriggered && rightTriggered) {
-    actionLabel = "right-trim";
-    Acebott.DriveSides(turnOuterSpeed, turnInnerSpeed);
-  } else {
-    // Both sensors are triggered, or one/both are in an ambiguous high range: stop cleanly.
-    actionLabel = "double-stop";
-    Acebott.Move(Stop, 0);
-  }
-
-  if (millis() - lastTelemetryMs >= 250) {
-    lastTelemetryMs = millis();
-    telemetryPrintf(
-      "TRACK1",
-      "L=%d R=%d line=%d%d action=%s",
-      Left_Tra_Value,
-      Right_Tra_Value,
-      leftTriggered ? 1 : 0,
-      rightTriggered ? 1 : 0,
       actionLabel
     );
   }
@@ -796,13 +859,13 @@ void parseData() {
       Serial.println("[BODY] CMD_STANDBY");
       setFunctionMode(STANDBY, "standby command");
       break;
-    case CMD_TRACK_1:
-      Serial.println("[BODY] CMD_TRACK_1");
-      setFunctionMode(TRACK_1, "track1 command");
+    case CMD_TRACK_LEGACY:
+      Serial.println("[BODY] CMD_TRACK_LEGACY");
+      setFunctionMode(TRACK, "legacy track command");
       break;
-    case CMD_TRACK_2:
-      Serial.println("[BODY] CMD_TRACK_2");
-      setFunctionMode(TRACK_2, "track2 command");
+    case CMD_TRACK:
+      Serial.println("[BODY] CMD_TRACK");
+      setFunctionMode(TRACK, "track command");
       break;
     case CMD_AVOID:
       Serial.println("[BODY] CMD_AVOID");

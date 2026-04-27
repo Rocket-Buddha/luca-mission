@@ -233,13 +233,12 @@ void setup() {
 
     if (cmd == "Track") {
       String value = webServer.arg("value");
-      appendTelemetryf("[CAM] track mode=%s", value.c_str());
-      if (value == "1") {
-        setPacket({ 0xFF, 0x55, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04 });
+      if (value.length() > 0) {
+        appendTelemetryf("[CAM] track mode=3-sensor request=%s", value.c_str());
+      } else {
+        appendTelemetryLine("[CAM] track mode=3-sensor");
       }
-      if (value == "2") {
-        setPacket({ 0xFF, 0x55, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05 });
-      }
+      setPacket({ 0xFF, 0x55, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05 });
     }
 
     if (cmd == "Avoidance") {

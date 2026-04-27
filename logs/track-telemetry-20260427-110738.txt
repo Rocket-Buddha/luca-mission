@@ -1,0 +1,216 @@
+id: 1
+event: line
+data: [0.4s] [BOOT] WiFi AP up
+
+id: 2
+event: line
+data: [1.2s] [CAM] camera/control services up
+
+id: 3
+event: line
+data: [212.9s] [BODY][BATTERY] pct=93 pack=8.24V sense=2.557V
+
+id: 4
+event: line
+data: [242.9s] [BODY][BATTERY] pct=93 pack=8.23V sense=2.556V
+
+id: 5
+event: line
+data: [272.9s] [BODY][BATTERY] pct=93 pack=8.23V sense=2.555V
+
+id: 6
+event: line
+data: [302.9s] [BODY][BATTERY] pct=93 pack=8.22V sense=2.552V
+
+id: 7
+event: line
+data: [332.9s] [BODY][BATTERY] pct=93 pack=8.22V sense=2.552V
+
+id: 8
+event: line
+data: [362.9s] [BODY][BATTERY] pct=92 pack=8.22V sense=2.551V
+
+id: 9
+event: line
+data: [384.6s] [HTTP] /control cmd=Track
+
+id: 10
+event: line
+data: [384.6s] [CAM] track mode=2
+
+id: 11
+event: line
+data: [384.6s] [BODY] rx 0xFF
+
+id: 12
+event: line
+data: [384.6s] [BODY] rx 0x55
+
+id: 13
+event: line
+data: [384.6s] [BODY] rx 0x07
+
+id: 14
+event: line
+data: [384.6s] [BODY] rx 0x00
+
+id: 15
+event: line
+data: [384.6s] [BODY] rx 0x00
+
+id: 16
+event: line
+data: [384.6s] [BODY] rx 0x00
+
+id: 17
+event: line
+data: [384.6s] [BODY] rx 0x00
+
+id: 18
+event: line
+data: [384.6s] [BODY] rx 0x00
+
+id: 19
+event: line
+data: [384.6s] [BODY] rx 0x00
+
+id: 20
+event: line
+data: [384.6s] [BODY] rx 0x05
+
+id: 21
+event: line
+data: [384.6s] [BODY] packet len=8 data=00 00 07 00 00 00 00 00
+
+id: 22
+event: line
+data: [384.6s] [BODY] parse action=0x05 device=0x00 val=0x00 index2=7 mode=STANDBY
+
+id: 23
+event: line
+data: [384.6s] [BODY] CMD_TRACK
+
+id: 24
+event: line
+data: [384.6s] [BODY] mode STANDBY -> TRACK (track command)
+
+id: 25
+event: line
+data: [384.7s] [BODY][TRACK] L=156 M=163 R=549 line=000 action=line-lost-stop
+
+id: 26
+event: line
+data: [385.0s] [BODY][TRACK] L=159 M=166 R=554 line=000 action=line-lost-stop
+
+id: 27
+event: line
+data: [385.2s] [BODY][TRACK] L=162 M=163 R=552 line=000 action=line-lost-stop
+
+id: 28
+event: line
+data: [385.5s] [BODY][TRACK] L=159 M=166 R=557 line=000 action=line-lost-stop
+
+id: 29
+event: line
+data: [385.8s] [BODY][TRACK] L=157 M=165 R=554 line=000 action=line-lost-stop
+
+id: 30
+event: line
+data: [386.1s] [BODY][TRACK] L=159 M=167 R=554 line=000 action=line-lost-stop
+
+id: 31
+event: line
+data: [386.4s] [BODY][TRACK] L=157 M=166 R=553 line=000 action=line-lost-stop
+
+id: 32
+event: line
+data: [386.6s] [BODY][TRACK] L=158 M=165 R=551 line=000 action=line-lost-stop
+
+id: 33
+event: line
+data: [386.9s] [BODY][TRACK] L=157 M=169 R=553 line=000 action=line-lost-stop
+
+id: 34
+event: line
+data: [387.2s] [BODY][TRACK] L=157 M=165 R=551 line=000 action=line-lost-stop
+
+id: 35
+event: line
+data: [387.5s] [BODY][TRACK] L=158 M=162 R=555 line=000 action=line-lost-stop
+
+id: 36
+event: line
+data: [387.7s] [HTTP] /control cmd=stopA
+
+id: 37
+event: line
+data: [387.7s] [CAM] standby mode
+
+id: 38
+event: line
+data: [387.7s] [BODY] rx 0xFF
+
+id: 39
+event: line
+data: [387.7s] [BODY] rx 0x55
+
+id: 40
+event: line
+data: [387.8s] [BODY][TRACK] L=163 M=163 R=552 line=000 action=line-lost-stop
+
+id: 41
+event: line
+data: [387.8s] [BODY] rx 0x07
+
+id: 42
+event: line
+data: [387.8s] [BODY] rx 0x00
+
+id: 43
+event: line
+data: [387.8s] [BODY] rx 0x00
+
+id: 44
+event: line
+data: [387.9s] [BODY] rx 0x00
+
+id: 45
+event: line
+data: [387.9s] [BODY] rx 0x00
+
+id: 46
+event: line
+data: [387.9s] [BODY] rx 0x00
+
+id: 47
+event: line
+data: [388.0s] [BODY] rx 0x00
+
+id: 48
+event: line
+data: [388.0s] [BODY][TRACK] L=158 M=167 R=551 line=000 action=line-lost-stop
+
+id: 49
+event: line
+data: [388.0s] [BODY] rx 0x03
+
+id: 50
+event: line
+data: [388.0s] [BODY] packet len=8 data=00 00 07 00 00 00 00 00
+
+id: 51
+event: line
+data: [388.0s] [BODY] parse action=0x03 device=0x00 val=0x00 index2=7 mode=TRACK
+
+id: 52
+event: line
+data: [388.0s] [BODY] CMD_STANDBY
+
+id: 53
+event: line
+data: [388.1s] [BODY] mode TRACK -> STANDBY (standby command)
+
+id: 54
+event: line
+data: [392.8s] [BODY][BATTERY] pct=93 pack=8.23V sense=2.554V
+

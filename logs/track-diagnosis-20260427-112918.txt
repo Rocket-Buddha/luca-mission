@@ -1,0 +1,307 @@
+id: 1641
+event: line
+data: [1636.7s] [MOTOR] start state=rotate-counterclockwise front-left=-170 rear-left=-170 front-right=170 rear-right=170
+
+id: 1642
+event: line
+data: [1636.7s] [MOTOR] stop state=rotate-counterclockwise
+
+id: 1643
+event: line
+data: [1636.7s] [BODY][TRACK] L=190 M=176 R=337 line=100 action=brake-left
+
+id: 1644
+event: line
+data: [1636.7s] [MOTOR] start state=rotate-counterclockwise front-left=-170 rear-left=-170 front-right=170 rear-right=170
+
+id: 1645
+event: line
+data: [1637.0s] [MOTOR] stop state=rotate-counterclockwise
+
+id: 1646
+event: line
+data: [1637.0s] [BODY][TRACK] L=159 M=143 R=401 line=000 action=line-lost-stop
+
+id: 1647
+event: line
+data: [1637.3s] [BODY][TRACK] L=132 M=134 R=179 line=000 action=line-lost-stop
+
+id: 1648
+event: line
+data: [1637.5s] [BODY][TRACK] L=137 M=139 R=182 line=000 action=line-lost-stop
+
+id: 1649
+event: line
+data: [1637.8s] [BODY][TRACK] L=135 M=134 R=180 line=000 action=line-lost-stop
+
+id: 1650
+event: line
+data: [1638.1s] [BODY][TRACK] L=137 M=129 R=179 line=000 action=line-lost-stop
+
+id: 1651
+event: line
+data: [1638.4s] [BODY][TRACK] L=141 M=133 R=178 line=000 action=line-lost-stop
+
+id: 1652
+event: line
+data: [1638.7s] [BODY][TRACK] L=131 M=136 R=177 line=000 action=line-lost-stop
+
+id: 1653
+event: line
+data: [1638.9s] [BODY][TRACK] L=136 M=136 R=176 line=000 action=line-lost-stop
+
+id: 1654
+event: line
+data: [1639.2s] [BODY][TRACK] L=131 M=134 R=180 line=000 action=line-lost-stop
+
+id: 1655
+event: line
+data: [1639.5s] [BODY][TRACK] L=132 M=135 R=182 line=000 action=line-lost-stop
+
+id: 1656
+event: line
+data: [1639.8s] [BODY][TRACK] L=131 M=134 R=178 line=000 action=line-lost-stop
+
+id: 1657
+event: line
+data: [1640.1s] [BODY][TRACK] L=138 M=132 R=179 line=000 action=line-lost-stop
+
+id: 1658
+event: line
+data: [1640.3s] [BODY][TRACK] L=138 M=135 R=179 line=000 action=line-lost-stop
+
+id: 1659
+event: line
+data: [1640.6s] [BODY][TRACK] L=136 M=131 R=179 line=000 action=line-lost-stop
+
+id: 1660
+event: line
+data: [1640.9s] [BODY][TRACK] L=128 M=136 R=178 line=000 action=line-lost-stop
+
+id: 1661
+event: line
+data: [1641.2s] [BODY][TRACK] L=134 M=136 R=175 line=000 action=line-lost-stop
+
+id: 1662
+event: line
+data: [1641.5s] [BODY][TRACK] L=137 M=135 R=181 line=000 action=line-lost-stop
+
+id: 1663
+event: line
+data: [1641.7s] [BODY][TRACK] L=132 M=130 R=180 line=000 action=line-lost-stop
+
+id: 1664
+event: line
+data: [1642.0s] [BODY][TRACK] L=133 M=134 R=176 line=000 action=line-lost-stop
+
+id: 1665
+event: line
+data: [1642.3s] [BODY][TRACK] L=135 M=134 R=180 line=000 action=line-lost-stop
+
+id: 1666
+event: line
+data: [1642.6s] [BODY][TRACK] L=132 M=130 R=180 line=000 action=line-lost-stop
+
+id: 1667
+event: line
+data: [1642.9s] [BODY][TRACK] L=141 M=136 R=179 line=000 action=line-lost-stop
+
+id: 1668
+event: line
+data: [1643.1s] [BODY][TRACK] L=140 M=135 R=176 line=000 action=line-lost-stop
+
+id: 1669
+event: line
+data: [1643.4s] [BODY][TRACK] L=137 M=133 R=178 line=000 action=line-lost-stop
+
+id: 1670
+event: line
+data: [1643.7s] [BODY][TRACK] L=134 M=133 R=180 line=000 action=line-lost-stop
+
+id: 1671
+event: line
+data: [1644.0s] [BODY][TRACK] L=133 M=137 R=180 line=000 action=line-lost-stop
+
+id: 1672
+event: line
+data: [1644.3s] [BODY][TRACK] L=136 M=133 R=179 line=000 action=line-lost-stop
+
+id: 1673
+event: line
+data: [1644.5s] [BODY][TRACK] L=137 M=130 R=179 line=000 action=line-lost-stop
+
+id: 1674
+event: line
+data: [1644.8s] [BODY][TRACK] L=137 M=129 R=179 line=000 action=line-lost-stop
+
+id: 1675
+event: line
+data: [1645.1s] [BODY][TRACK] L=131 M=132 R=178 line=000 action=line-lost-stop
+
+id: 1676
+event: line
+data: [1645.4s] [BODY][TRACK] L=137 M=136 R=175 line=000 action=line-lost-stop
+
+id: 1677
+event: line
+data: [1645.7s] [BODY][TRACK] L=136 M=132 R=177 line=000 action=line-lost-stop
+
+id: 1678
+event: line
+data: [1645.9s] [BODY][TRACK] L=135 M=134 R=181 line=000 action=line-lost-stop
+
+id: 1679
+event: line
+data: [1646.2s] [BODY][TRACK] L=130 M=135 R=182 line=000 action=line-lost-stop
+
+id: 1680
+event: line
+data: [1646.3s] [HTTP] /control cmd=stopA
+
+id: 1681
+event: line
+data: [1646.3s] [CAM] standby mode
+
+id: 1682
+event: line
+data: [1646.5s] [BODY][TRACK] L=141 M=134 R=178 line=000 action=line-lost-stop
+
+id: 1683
+event: line
+data: [1646.7s] [BODY] packet len=8 data=00 00 07 00 00 00 00 00
+
+id: 1684
+event: line
+data: [1646.7s] [BODY] parse action=0x03 device=0x00 val=0x00 index2=7 mode=TRACK
+
+id: 1685
+event: line
+data: [1646.7s] [BODY] CMD_STANDBY
+
+id: 1686
+event: line
+data: [1646.7s] [BODY] mode TRACK -> STANDBY (standby command)
+
+id: 1687
+event: line
+data: [1651.4s] [BODY][BATTERY] pct=91 pack=8.18V sense=2.539V
+
+id: 1688
+event: line
+data: [1681.4s] [BODY][BATTERY] pct=91 pack=8.19V sense=2.541V
+
+id: 1689
+event: line
+data: [1684.6s] [HTTP] /control cmd=Track
+
+id: 1690
+event: line
+data: [1684.6s] [CAM] track mode=2
+
+id: 1691
+event: line
+data: [1684.6s] [BODY] packet len=8 data=00 00 07 00 00 00 00 00
+
+id: 1692
+event: line
+data: [1684.6s] [BODY] parse action=0x05 device=0x00 val=0x00 index2=7 mode=STANDBY
+
+id: 1693
+event: line
+data: [1684.6s] [BODY] CMD_TRACK
+
+id: 1694
+event: line
+data: [1684.6s] [BODY] mode STANDBY -> TRACK (track command)
+
+id: 1695
+event: line
+data: [1684.6s] [BODY][TRACK] L=144 M=165 R=614 line=000 action=line-lost-stop
+
+id: 1696
+event: line
+data: [1684.9s] [BODY][TRACK] L=149 M=169 R=615 line=000 action=line-lost-stop
+
+id: 1697
+event: line
+data: [1685.2s] [BODY][TRACK] L=146 M=165 R=618 line=000 action=line-lost-stop
+
+id: 1698
+event: line
+data: [1685.4s] [BODY][TRACK] L=148 M=169 R=620 line=000 action=line-lost-stop
+
+id: 1699
+event: line
+data: [1685.7s] [BODY][TRACK] L=147 M=172 R=616 line=000 action=line-lost-stop
+
+id: 1700
+event: line
+data: [1686.0s] [BODY][TRACK] L=145 M=168 R=618 line=000 action=line-lost-stop
+
+id: 1701
+event: line
+data: [1686.3s] [BODY][TRACK] L=149 M=168 R=618 line=000 action=line-lost-stop
+
+id: 1702
+event: line
+data: [1686.6s] [BODY][TRACK] L=148 M=168 R=616 line=000 action=line-lost-stop
+
+id: 1703
+event: line
+data: [1686.8s] [BODY][TRACK] L=146 M=168 R=619 line=000 action=line-lost-stop
+
+id: 1704
+event: line
+data: [1687.1s] [BODY][TRACK] L=148 M=172 R=612 line=000 action=line-lost-stop
+
+id: 1705
+event: line
+data: [1687.4s] [BODY][TRACK] L=146 M=175 R=618 line=000 action=line-lost-stop
+
+id: 1706
+event: line
+data: [1687.7s] [BODY][TRACK] L=146 M=173 R=618 line=000 action=line-lost-stop
+
+id: 1707
+event: line
+data: [1688.0s] [BODY][TRACK] L=148 M=166 R=615 line=000 action=line-lost-stop
+
+id: 1708
+event: line
+data: [1688.2s] [BODY][TRACK] L=144 M=171 R=619 line=000 action=line-lost-stop
+
+id: 1709
+event: line
+data: [1688.5s] [BODY][TRACK] L=147 M=171 R=618 line=000 action=line-lost-stop
+
+id: 1710
+event: line
+data: [1688.6s] [HTTP] /control cmd=stopA
+
+id: 1711
+event: line
+data: [1688.6s] [CAM] standby mode
+
+id: 1712
+event: line
+data: [1688.8s] [BODY][TRACK] L=148 M=169 R=618 line=000 action=line-lost-stop
+
+id: 1713
+event: line
+data: [1689.0s] [BODY] packet len=8 data=00 00 07 00 00 00 00 00
+
+id: 1714
+event: line
+data: [1689.0s] [BODY] parse action=0x03 device=0x00 val=0x00 index2=7 mode=TRACK
+
+id: 1715
+event: line
+data: [1689.0s] [BODY] CMD_STANDBY
+
+id: 1716
+event: line
+data: [1689.0s] [BODY] mode TRACK -> STANDBY (standby command)
+
+event: ping
+data: alive
+
