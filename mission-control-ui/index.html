@@ -815,6 +815,252 @@
         margin-left: 0;
       }
 
+      .camera-button.connect-rover-button {
+        min-width: 0;
+        padding: 0 13px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+
+      .camera-button.connect-rover-button span {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        width: auto;
+        white-space: nowrap;
+        color: inherit;
+      }
+
+      .connect-rover-button .pad-badge {
+        margin-left: 0;
+      }
+
+      .rover-config-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 60;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: clamp(16px, 3vw, 32px);
+        background:
+          radial-gradient(circle at 50% 22%, rgba(249, 215, 3, 0.08), transparent 24%),
+          rgba(1, 1, 1, 0.78);
+        backdrop-filter: blur(12px);
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transition: opacity 180ms ease, visibility 0s linear 180ms;
+      }
+
+      .rover-config-modal[hidden] {
+        display: none;
+      }
+
+      .rover-config-modal.is-open {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+        transition: opacity 180ms ease;
+      }
+
+      .rover-config-card {
+        width: min(100%, 520px);
+        border-radius: 28px;
+        padding: clamp(18px, 3vw, 26px);
+        background:
+          radial-gradient(circle at 18% 12%, rgba(249, 215, 3, 0.14), transparent 34%),
+          linear-gradient(180deg, rgba(249, 215, 3, 0.06), rgba(249, 215, 3, 0.02)),
+          rgba(2, 3, 5, 0.98);
+        border: 1px solid rgba(249, 215, 3, 0.3);
+        box-shadow:
+          0 30px 72px rgba(0, 0, 0, 0.6),
+          inset 0 0 0 1px rgba(249, 215, 3, 0.06);
+        opacity: 0;
+        transform: translateY(14px) scale(0.985);
+        transition:
+          opacity 180ms ease,
+          transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+      }
+
+      .rover-config-modal.is-open .rover-config-card {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+
+      .rover-config-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 14px;
+      }
+
+      .rover-config-copy {
+        min-width: 0;
+      }
+
+      .rover-config-kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--gold);
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+      }
+
+      .rover-config-kicker::before {
+        content: "";
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: rgba(249, 215, 3, 0.85);
+        box-shadow: 0 0 12px rgba(249, 215, 3, 0.45);
+      }
+
+      .rover-config-title {
+        margin: 10px 0 0;
+        font-family: var(--font-display);
+        font-size: clamp(1.2rem, 2vw, 1.55rem);
+        line-height: 1.15;
+        color: #fffaf0;
+      }
+
+      .rover-config-description {
+        margin: 10px 0 0;
+        max-width: 42ch;
+        color: var(--muted);
+        font-size: 0.92rem;
+        line-height: 1.55;
+      }
+
+      .rover-config-close-button {
+        flex: 0 0 auto;
+      }
+
+      .rover-config-body {
+        margin-top: 18px;
+        display: grid;
+        gap: 14px;
+      }
+
+      .rover-config-status {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px 14px;
+        padding: 12px 14px;
+        border-radius: 18px;
+        background:
+          linear-gradient(180deg, rgba(249, 215, 3, 0.05), rgba(249, 215, 3, 0.02)),
+          rgba(8, 10, 14, 0.94);
+        border: 1px solid rgba(249, 215, 3, 0.16);
+      }
+
+      .rover-config-status-label {
+        color: var(--muted);
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+      }
+
+      .rover-config-status-value {
+        color: #fff7c4;
+        font-size: 0.9rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+      }
+
+      .rover-config-status-value.is-empty {
+        color: var(--muted);
+      }
+
+      .rover-config-form {
+        display: grid;
+        gap: 14px;
+      }
+
+      .rover-config-field {
+        display: grid;
+        gap: 8px;
+      }
+
+      .rover-config-label {
+        color: var(--muted);
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+      }
+
+      .rover-config-input {
+        width: 100%;
+        padding: 14px 16px;
+        border-radius: 16px;
+        border: 1px solid rgba(249, 215, 3, 0.24);
+        background:
+          linear-gradient(180deg, rgba(249, 215, 3, 0.03), rgba(249, 215, 3, 0.01)),
+          rgba(5, 7, 11, 0.98);
+        color: var(--text);
+        font: inherit;
+        font-size: 1rem;
+        transition: border-color 120ms ease, box-shadow 120ms ease;
+      }
+
+      .rover-config-input::placeholder {
+        color: rgba(255, 247, 208, 0.34);
+      }
+
+      .rover-config-input:focus {
+        outline: none;
+        border-color: rgba(255, 247, 208, 0.84);
+        box-shadow: 0 0 0 3px rgba(249, 215, 3, 0.12);
+      }
+
+      .rover-config-input[aria-invalid="true"] {
+        border-color: rgba(255, 138, 138, 0.84);
+        box-shadow: 0 0 0 3px rgba(255, 138, 138, 0.12);
+      }
+
+      .rover-config-hint {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.84rem;
+        line-height: 1.55;
+      }
+
+      .rover-config-hint[data-state="error"] {
+        color: #ffb4b4;
+      }
+
+      .rover-config-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 4px;
+      }
+
+      .rover-config-actions .camera-button {
+        min-width: 116px;
+      }
+
+      .rover-config-save-button {
+        color: #090909;
+        background:
+          linear-gradient(180deg, #fff3a7, #f9d703 70%, #efcb00);
+        border-color: rgba(255, 247, 208, 0.75);
+        box-shadow: 0 0 22px rgba(249, 215, 3, 0.18);
+      }
+
+      .rover-config-save-button span {
+        color: rgba(9, 9, 9, 0.68);
+      }
+
       .drive-panel .joystick-shell,
       .drive-panel .drive-subcontrols,
       .drive-panel .meter-card {
@@ -1810,6 +2056,14 @@
           justify-content: flex-start;
         }
 
+        .rover-config-actions {
+          flex-direction: column-reverse;
+        }
+
+        .rover-config-actions .camera-button {
+          width: 100%;
+        }
+
         .topbar-actions {
           width: 100%;
           align-items: flex-start;
@@ -1928,6 +2182,19 @@
               </span>
               <b class="pad-badge">START</b>
             </button>
+            <button
+              class="camera-button connect-rover-button"
+              id="connectRoverButton"
+              type="button"
+              title="Configurar enlace del rover"
+              aria-label="Configurar enlace del rover"
+              aria-haspopup="dialog"
+              aria-controls="roverConfigModal"
+              aria-expanded="false"
+            >
+              Conectar
+              <span><b class="pad-badge">LT</b> +<b class="pad-badge">RT</b></span>
+            </button>
           </div>
           <div class="mission-clock" aria-label="Fecha y hora local">
             <span class="mission-clock-value" id="missionClockValue">LOCAL: -- --- ---- · --:--:--</span>
@@ -1939,6 +2206,72 @@
       <audio id="ambientAudio" preload="auto" loop>
         <source src="./MyVeryOwnDeadShip.ogg" type="audio/ogg" />
       </audio>
+
+      <div class="rover-config-modal" id="roverConfigModal" hidden>
+        <section
+          class="rover-config-card"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="roverConfigTitle"
+          aria-describedby="roverConfigDescription"
+        >
+          <div class="rover-config-header">
+            <div class="rover-config-copy">
+              <span class="rover-config-kicker">Enlace Rover</span>
+              <h2 class="rover-config-title" id="roverConfigTitle">Configurar enlace del rover</h2>
+              <p class="rover-config-description" id="roverConfigDescription">
+                Define la IP o el hostname que usa el panel para stream, telemetria y comandos.
+              </p>
+            </div>
+            <button
+              class="camera-button panel-fullscreen-button rover-config-close-button"
+              id="roverConfigCloseButton"
+              type="button"
+              title="Cerrar"
+              aria-label="Cerrar"
+            >
+              <span aria-hidden="true">✕</span>
+            </button>
+          </div>
+          <div class="rover-config-body">
+            <div class="rover-config-status" aria-live="polite">
+              <span class="rover-config-status-label">Enlace actual</span>
+              <strong class="rover-config-status-value" id="roverConfigCurrentValue">Sin configurar</strong>
+            </div>
+            <form class="rover-config-form" id="roverConfigForm">
+              <label class="rover-config-field" for="roverHostInput">
+                <span class="rover-config-label">IP o hostname</span>
+                <input
+                  class="rover-config-input"
+                  id="roverHostInput"
+                  name="roverHost"
+                  type="text"
+                  inputmode="url"
+                  autocomplete="off"
+                  autocapitalize="off"
+                  spellcheck="false"
+                  placeholder="192.168.4.1"
+                  aria-describedby="roverConfigHint"
+                  aria-invalid="false"
+                />
+              </label>
+              <p class="rover-config-hint" id="roverConfigHint" data-state="hint">
+                Usa solo la direccion del rover, sin `http://` ni puertos.
+              </p>
+              <div class="rover-config-actions">
+                <button class="camera-button" id="roverConfigCancelButton" type="button">
+                  Cancelar
+                  <span>volver al panel</span>
+                </button>
+                <button class="camera-button rover-config-save-button" type="submit">
+                  Guardar
+                  <span>aplicar enlace</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </section>
+      </div>
 
       <main class="main-grid">
         <section class="panel drive-panel" data-view="stick">
@@ -2236,6 +2569,14 @@
       const ambientAudio = document.getElementById('ambientAudio');
       const ambientAudioToggle = document.getElementById('ambientAudioToggle');
       const ambientAudioToggleGlyph = document.getElementById('ambientAudioToggleGlyph');
+      const connectRoverButton = document.getElementById('connectRoverButton');
+      const roverConfigModal = document.getElementById('roverConfigModal');
+      const roverConfigCloseButton = document.getElementById('roverConfigCloseButton');
+      const roverConfigCancelButton = document.getElementById('roverConfigCancelButton');
+      const roverConfigForm = document.getElementById('roverConfigForm');
+      const roverHostInput = document.getElementById('roverHostInput');
+      const roverConfigHint = document.getElementById('roverConfigHint');
+      const roverConfigCurrentValue = document.getElementById('roverConfigCurrentValue');
       const speedInput = document.getElementById('speed');
       const speedValue = document.getElementById('speedValue');
       const servoInput = document.getElementById('servo');
@@ -2318,6 +2659,9 @@
       let spaceWrapRestoreTimer = null;
       let spaceWrapActive = false;
       let pendingFullscreenTransition = null;
+      let roverConfigModalTimer = null;
+      let roverConfigModalOpen = false;
+      let roverConfigRestoreFocusElement = null;
 
       const GAMEPAD_STICK_DEADZONE = 0.18;
       const GAMEPAD_SERVO_DEADZONE = 0.22;
@@ -2341,10 +2685,18 @@
       const TELEMETRY_WAITING_INTERVAL_MS = 1000 / TELEMETRY_WAITING_FPS;
       const TELEMETRY_BUFFER_LIMIT = 48;
       const TELEMETRY_OFFLINE_TIMEOUT_MS = 7500 * STREAM_COPY_DURATION_MULTIPLIER;
-      const ROVER_BASE_URL = 'http://192.168.4.1';
-      const ROVER_CONTROL_URL = ROVER_BASE_URL + '/control';
-      const ROVER_CAMERA_URL = ROVER_BASE_URL + ':81';
-      const TELEMETRY_STREAM_URL = ROVER_BASE_URL + ':82/telemetry';
+      const ROVER_HOST_STORAGE_KEY = 'mission-luca-rover-host';
+      const roverUrlParams = new URLSearchParams(window.location.search);
+      let storedRoverHost = '';
+      try {
+        storedRoverHost = window.localStorage.getItem(ROVER_HOST_STORAGE_KEY) || '';
+      } catch (error) {}
+      let configuredRoverHost = (roverUrlParams.get('rover') || storedRoverHost || '').trim();
+      let hasConfiguredRoverHost = false;
+      let ROVER_BASE_URL = '';
+      let ROVER_CONTROL_URL = '';
+      let ROVER_CAMERA_URL = '';
+      let TELEMETRY_STREAM_URL = '';
       const DRIVE_MAP_CENTER = [-37.95323149737824, -57.570255709533605];
       const STARFIELD_FAR_COUNT = 108;
       const STARFIELD_NEAR_COUNT = 148;
@@ -2480,8 +2832,166 @@
         `
       };
 
+      function normalizeRoverHost(value) {
+        return String(value || '').trim().replace(/^https?:\/\//i, '').replace(/\/+$/, '');
+      }
+
+      function syncRoverHostConfiguration() {
+        configuredRoverHost = normalizeRoverHost(configuredRoverHost);
+        hasConfiguredRoverHost = configuredRoverHost.length > 0;
+        ROVER_BASE_URL = hasConfiguredRoverHost ? 'http://' + configuredRoverHost : '';
+        ROVER_CONTROL_URL = hasConfiguredRoverHost ? ROVER_BASE_URL + '/control' : '';
+        ROVER_CAMERA_URL = hasConfiguredRoverHost ? ROVER_BASE_URL + ':81' : '';
+        TELEMETRY_STREAM_URL = hasConfiguredRoverHost ? ROVER_BASE_URL + ':82/telemetry' : '';
+      }
+
+      function persistRoverHostConfiguration() {
+        try {
+          if (configuredRoverHost) {
+            window.localStorage.setItem(ROVER_HOST_STORAGE_KEY, configuredRoverHost);
+          } else {
+            window.localStorage.removeItem(ROVER_HOST_STORAGE_KEY);
+          }
+        } catch (error) {}
+      }
+
+      syncRoverHostConfiguration();
+      persistRoverHostConfiguration();
+
       function setStatus(text) {
         statusPill.textContent = text;
+      }
+
+      function closeTelemetryStream() {
+        clearTelemetryAliveWatch();
+        if (telemetrySource) {
+          telemetrySource.close();
+          telemetrySource = null;
+        }
+      }
+
+      function setRoverConfigHint(text, state = 'hint') {
+        roverConfigHint.textContent = text;
+        roverConfigHint.dataset.state = state;
+        roverHostInput.setAttribute('aria-invalid', state === 'error' ? 'true' : 'false');
+      }
+
+      function syncConnectRoverButton() {
+        connectRoverButton.classList.toggle('is-active', hasConfiguredRoverHost);
+        connectRoverButton.title = hasConfiguredRoverHost
+          ? `Editar enlace del rover (${configuredRoverHost})`
+          : 'Configurar enlace del rover';
+        connectRoverButton.setAttribute(
+          'aria-label',
+          hasConfiguredRoverHost
+            ? `Editar enlace del rover ${configuredRoverHost}. Atajo LT mas RT`
+            : 'Configurar enlace del rover. Atajo LT mas RT'
+        );
+        connectRoverButton.setAttribute('aria-expanded', roverConfigModalOpen ? 'true' : 'false');
+        roverConfigCurrentValue.textContent = hasConfiguredRoverHost ? configuredRoverHost : 'Sin configurar';
+        roverConfigCurrentValue.classList.toggle('is-empty', !hasConfiguredRoverHost);
+      }
+
+      function openRoverConfigModal() {
+        if (roverConfigModalOpen) {
+          return;
+        }
+
+        if (roverConfigModalTimer !== null) {
+          clearTimeout(roverConfigModalTimer);
+          roverConfigModalTimer = null;
+        }
+
+        roverConfigRestoreFocusElement = document.activeElement;
+        roverConfigModal.hidden = false;
+        roverConfigModalOpen = true;
+        roverHostInput.value = configuredRoverHost;
+        setRoverConfigHint('Usa solo la direccion del rover, sin http:// ni puertos.');
+        syncConnectRoverButton();
+        window.requestAnimationFrame(() => {
+          roverConfigModal.classList.add('is-open');
+          roverHostInput.focus();
+          roverHostInput.select();
+        });
+      }
+
+      function closeRoverConfigModal(options = {}) {
+        const restoreFocus = options.restoreFocus !== false;
+        if (!roverConfigModalOpen && roverConfigModal.hidden) {
+          return;
+        }
+
+        if (roverConfigModalTimer !== null) {
+          clearTimeout(roverConfigModalTimer);
+        }
+
+        roverConfigModalOpen = false;
+        roverConfigModal.classList.remove('is-open');
+        syncConnectRoverButton();
+        roverConfigModalTimer = window.setTimeout(() => {
+          roverConfigModal.hidden = true;
+          roverConfigModalTimer = null;
+          if (
+            restoreFocus &&
+            roverConfigRestoreFocusElement &&
+            typeof roverConfigRestoreFocusElement.focus === 'function'
+          ) {
+            roverConfigRestoreFocusElement.focus();
+          }
+          roverConfigRestoreFocusElement = null;
+        }, 180);
+      }
+
+      function applyRoverHostConfiguration(nextHost) {
+        const normalizedHost = normalizeRoverHost(nextHost);
+        if (!normalizedHost) {
+          setRoverConfigHint('Ingresa una IP o hostname del rover.', 'error');
+          roverHostInput.focus();
+          return false;
+        }
+
+        const hostChanged = normalizedHost !== configuredRoverHost;
+        configuredRoverHost = normalizedHost;
+        syncRoverHostConfiguration();
+        persistRoverHostConfiguration();
+        telemetryBuffer.length = 0;
+        telemetryAutoStick = true;
+        stopTelemetryWaitingAnimation();
+        closeTelemetryStream();
+        resetBatterySnapshot();
+        syncConnectRoverButton();
+        closeRoverConfigModal();
+        connectTelemetryStream();
+        setCameraVisual('stream');
+        setStatus(hostChanged ? `Rover ${configuredRoverHost} configurado` : `Rover ${configuredRoverHost} listo`);
+        return true;
+      }
+
+      function showMissingRoverHostState() {
+        clearStreamFallback();
+        clearStreamRetry();
+        clearStreamStall();
+        closeTelemetryStream();
+
+        streamLoadCount = 0;
+        telemetryOfflineState = true;
+        cameraStage.classList.remove('has-video');
+        camera.classList.remove('is-visible');
+        setVideoSearchState(false);
+        setPlaceholderState('Mision Luca', 'Falta configurar la IP o hostname del rover para habilitar el enlace.');
+        cameraPlaceholder.hidden = false;
+        camera.removeAttribute('src');
+        feedBadge.textContent = 'Off';
+        feedBadge.classList.remove('live');
+        stopTelemetryWaitingAnimation();
+        telemetryWaitingVisible = true;
+        telemetryWaitingMessage = 'Rover sin enlace';
+        telemetryWaitingFrame = 0;
+        renderTelemetryConsole();
+        setBatteryTelemetryLinkState('offline');
+        resetBatterySnapshot();
+        setStatus('Rover sin enlace');
+        syncConnectRoverButton();
       }
 
       function isAmbientAudioPlaying() {
@@ -3372,6 +3882,11 @@
       }
 
       function beginStreamRequest(message) {
+        if (!hasConfiguredRoverHost) {
+          showMissingRoverHostState();
+          return;
+        }
+
         clearStreamFallback();
         clearStreamRetry();
         clearStreamStall();
@@ -3407,6 +3922,11 @@
       }
 
       async function sendControl(query, text) {
+        if (!hasConfiguredRoverHost) {
+          showMissingRoverHostState();
+          return false;
+        }
+
         try {
           const response = await fetch(ROVER_CONTROL_URL + '?' + query);
           if (!response.ok) {
@@ -3510,6 +4030,11 @@
 
       function toggleStreamMode() {
         const nextMode = camera.dataset.mode === 'stream' ? 'close' : 'stream';
+        if (nextMode === 'stream' && !hasConfiguredRoverHost) {
+          showMissingRoverHostState();
+          return;
+        }
+
         setCameraVisual(nextMode);
         setStatus(nextMode === 'stream' ? 'Stream activo' : 'Camara en standby');
       }
@@ -3660,6 +4185,11 @@
       }
 
       function connectTelemetryStream() {
+        if (!hasConfiguredRoverHost) {
+          showMissingRoverHostState();
+          return;
+        }
+
         if (telemetrySource) {
           telemetrySource.close();
         }
@@ -4043,6 +4573,35 @@
         );
       });
 
+      connectRoverButton.addEventListener('click', () => {
+        openRoverConfigModal();
+      });
+
+      roverConfigCloseButton.addEventListener('click', () => {
+        closeRoverConfigModal();
+      });
+
+      roverConfigCancelButton.addEventListener('click', () => {
+        closeRoverConfigModal();
+      });
+
+      roverConfigModal.addEventListener('click', (event) => {
+        if (event.target === roverConfigModal) {
+          closeRoverConfigModal();
+        }
+      });
+
+      roverConfigForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        applyRoverHostConfiguration(roverHostInput.value);
+      });
+
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && roverConfigModalOpen) {
+          closeRoverConfigModal();
+        }
+      });
+
       ['pointerdown'].forEach((type) => {
         hornButton.addEventListener(type, async (event) => {
           event.preventDefault();
@@ -4213,6 +4772,8 @@
         const ltPressed = readGamepadButton(gamepad, 6);
         const rtPressed = readGamepadButton(gamepad, 7);
         const startPressed = readGamepadButton(gamepad, 9);
+        const roverConfigTogglePressed = ltPressed && rtPressed;
+        const roverConfigToggleWasPressed = Boolean(lastGamepadButtons[6] && lastGamepadButtons[7]);
         const telemetryTogglePressed = ltPressed && aPressed;
         const telemetryToggleWasPressed = Boolean(lastGamepadButtons[6] && lastGamepadButtons[0]);
         const driveMapTogglePressed = ltPressed && bPressed;
@@ -4221,6 +4782,14 @@
         const streamToggleWasPressed = Boolean(lastGamepadButtons[6] && lastGamepadButtons[2]);
         const cameraTogglePressed = ltPressed && yPressed;
         const cameraToggleWasPressed = Boolean(lastGamepadButtons[6] && lastGamepadButtons[3]);
+
+        if (roverConfigTogglePressed && !roverConfigToggleWasPressed) {
+          if (roverConfigModalOpen) {
+            closeRoverConfigModal();
+          } else {
+            openRoverConfigModal();
+          }
+        }
 
         if (telemetryTogglePressed && !telemetryToggleWasPressed) {
           if (hornActive) {
@@ -4259,7 +4828,7 @@
           activateModeButton(standbyModeButton);
         }
 
-        if (rtPressed && !lastGamepadButtons[7]) {
+        if (!ltPressed && rtPressed && !lastGamepadButtons[7]) {
           pulseButton(photoButton);
           snapshotFromLiveFrame();
         }
@@ -4366,9 +4935,15 @@
       updateNumericDisplays();
       ambientAudio.volume = AMBIENT_AUDIO_VOLUME;
       syncAmbientAudioButton();
+      syncConnectRoverButton();
       setAmbientAudioState(true, '', { silent: true });
-      connectTelemetryStream();
-      setCameraVisual('stream');
+      if (hasConfiguredRoverHost) {
+        connectTelemetryStream();
+        setCameraVisual('stream');
+      } else {
+        setCameraVisual('close');
+        showMissingRoverHostState();
+      }
       applyDrivePanelHeading(activeDrivePanelView);
       syncDrivePanelViewButton();
       driveViewToggleButton.addEventListener('click', toggleDrivePanelView);

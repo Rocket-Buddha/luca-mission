@@ -5,10 +5,10 @@ Este paquete deja separado el firmware de las 2 placas del carro:
 - `esp32-camera`: firmware de la placa de la camara
 - `esp32-body`: firmware de la placa que maneja motores, servos y sensores del cuerpo
 - `mission-control-ui`: panel local del rover, separado del firmware
+- `rover-discovery-helper`: helper local para descubrir la IP del rover por UDP y mostrarla en pantalla
 
 Los sketches auxiliares de prueba quedaron agrupados en:
 
-- `probes\esp32-camera-dhcp-probe`
 - `probes\esp32-body-motor-probe`
 
 Los archivos auxiliares que no forman parte del firmware principal quedaron separados en:
@@ -18,6 +18,10 @@ Los archivos auxiliares que no forman parte del firmware principal quedaron sepa
 - `logs`: capturas de monitor serie
 - `wifi-profiles`: perfiles Wi-Fi de Windows para las redes del ESP32
 
+Proyecto adicional para modo `STA` en Wi-Fi domestico:
+
+- `rover-discovery-helper`: escucha anuncios UDP del rover y muestra la IP detectada en una ventana local
+
 Archivos actuales:
 
 - `scripts\monitor-com5.ps1`: monitor serie de la placa body
@@ -25,9 +29,6 @@ Archivos actuales:
 - `mission-control-ui\index.html`: panel local de control y video
 - `logs\body-serial-log.txt`: generado por `scripts\monitor-com5.ps1`
 - `logs\cam-serial-log.txt`: generado por `scripts\monitor-com6.ps1`
-- `wifi-profiles\esp32-car-open.xml`: perfil abierto para `ESP32-Car`
-- `wifi-profiles\esp32-car-wifi.xml`: perfil WPA2 para `ESP32-Car`
-- `wifi-profiles\esp32-car-dhcp-open.xml`: perfil abierto para `ESP32-Car-DHCP`
 
 Los 2 proyectos fueron compilados y validados en esta maquina con `arduino-cli`.
 
@@ -134,8 +135,9 @@ Despues de grabar ambas placas:
 
 1. Reconectar `TX/RX` entre camara y body.
 2. Encender el carro.
-3. La camara crea el WiFi `ESP32-Car`.
-4. Clave por defecto: `12345678`.
+3. La camara se conecta al Wi-Fi `Personal-F0C`.
+4. Ejecutar `rover-discovery-helper` para ver la IP que obtuvo el rover.
+5. Abrir `mission-control-ui\index.html?rover=<ip-del-rover>`.
 
 ## Estado del paquete
 
@@ -143,7 +145,9 @@ Despues de grabar ambas placas:
 
 - Compila en esta maquina.
 - Quedo adaptado para el core `esp32` actual.
-- Solo expone servicios del rover: control, video/captura y telemetria.
+- Se conecta en modo `STA` a `Personal-F0C`.
+- Emite anuncios UDP de descubrimiento al obtener IP.
+- Expone servicios del rover: control, video/captura y telemetria.
 
 ### `mission-control-ui`
 

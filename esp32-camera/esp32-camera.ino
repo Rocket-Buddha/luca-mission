@@ -90,6 +90,7 @@ void drainSerial2Telemetry() {
 #define RXD2 14  // GPIO pin of RXD2 (Serial2 input)
 #define TXD2 13  // GPIO pin of TXD2 (Serial2 output)
 void CameraWebServer_init();
+void CameraWebServer_announceDiscovery();
 bool CameraWebServer_startServices();
 
 void startControlServices() {
@@ -112,8 +113,8 @@ void setup() {
   Serial2.begin(115200, SERIAL_8N1, RXD2, TXD2);
   telemetryMutex = xSemaphoreCreateMutex();
   CameraWebServer_init();  // Initialize camera web server
-  Serial.println("[BOOT] WiFi AP up");
-  appendTelemetryLine("[BOOT] WiFi AP up");
+  Serial.println("[BOOT] WiFi STA up");
+  appendTelemetryLine("[BOOT] WiFi STA up");
   delay(100);
 
   pinMode(gpLED, OUTPUT);  // Set gpLED pin as output
@@ -272,6 +273,7 @@ void setup() {
   });
 
   startControlServices();
+  CameraWebServer_announceDiscovery();
 }
 
 void loop() {

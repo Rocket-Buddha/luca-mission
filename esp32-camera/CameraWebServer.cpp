@@ -1,8 +1,21 @@
 #include "esp_system.h"
 #include "esp_camera.h"
 #include <WiFi.h>
+#include <WiFiUdp.h>
 
-const char *ssid = "ESP32-Car";
+const char *kStaSsid = "Personal-F0C";
+const char *kStaPassword = "00433457754";
+const char *kRoverId = "uca-rover";
+
+constexpr uint16_t kDiscoveryPort = 4210;
+constexpr uint16_t kDiscoverySourcePort = 4211;
+constexpr uint16_t kControlPort = 80;
+constexpr uint16_t kStreamPort = 81;
+constexpr uint16_t kTelemetryPort = 82;
+constexpr unsigned long kConnectAttemptTimeoutMs = 15000;
+constexpr unsigned long kRetryDelayMs = 1500;
+constexpr uint8_t kAnnouncementBurstCount = 3;
+constexpr unsigned long kAnnouncementBurstDelayMs = 120;
 
 #define PWDN_GPIO_NUM     32
 #define RESET_GPIO_NUM    -1
@@ -23,6 +36,85 @@ const char *ssid = "ESP32-Car";
 
 void startCameraServer();
 static bool cameraReady = false;
+
+void appendTelemetryLine(const String &rawLine);
+void appendTelemetryf(const char *format, ...);
+
+static IPAddress broadcastAddressFor(const IPAddress &ip, const IPAddress &mask)
+{
+  return IPAddress(
+    static_cast<uint8_t>(ip[0] | static_cast<uint8_t>(~mask[0])),
+    static_cast<uint8_t>(ip[1] | static_cast<uint8_t>(~mask[1])),
+    static_cast<uint8_t>(ip[2] | static_cast<uint8_t>(~mask[2])),
+    static_cast<uint8_t>(ip[3] | static_cast<uint8_t>(~mask[3]))
+  );
+}
+
+static void logConnectedStationSummary()
+{
+  String ip = WiFi.localIP().toString();
+  String mask = WiFi.subnetMask().toString();
+  String gateway = WiFi.gatewayIP().toString();
+  String broadcast = broadcastAddressFor(WiFi.localIP(), WiFi.subnetMask()).toString();
+
+  Serial.print("\r\n");
+  Serial.printf("[WIFI] connected to %s\r\n", kStaSsid);
+  Serial.printf("[WIFI] hostname: %s\r\n", kRoverId);
+  Serial.printf("[WIFI] ip: %s\r\n", ip.c_str());
+  Serial.printf("[WIFI] mask: %s\r\n", mask.c_str());
+  Serial.printf("[WIFI] gateway: %s\r\n", gateway.c_str());
+  Serial.printf("[WIFI] broadcast: %s\r\n", broadcast.c_str());
+  Serial.print("STA Ready! control=http://");
+  Serial.print(ip);
+  Serial.print("/control stream=http://");
+  Serial.print(ip);
+  Serial.print(":81/stream telemetry=http://");
+  Serial.print(ip);
+  Serial.println(":82/telemetry");
+
+  appendTelemetryf("[WIFI] connected ssid=%s ip=%s", kStaSsid, ip.c_str());
+  appendTelemetryLine("[WIFI] STA ready");
+}
+
+static void connectToStation()
+{
+  WiFi.persistent(false);
+  WiFi.useStaticBuffers(true);
+  WiFi.mode(WIFI_OFF);
+  delay(250);
+  WiFi.mode(WIFI_STA);
+  WiFi.setSleep(false);
+  WiFi.setAutoReconnect(true);
+  WiFi.setHostname(kRoverId);
+
+  unsigned long attempt = 0;
+  while (WiFi.status() != WL_CONNECTED) {
+    attempt++;
+    Serial.printf("\r\n[WIFI] connecting to %s attempt=%lu\r\n", kStaSsid, attempt);
+    appendTelemetryf("[WIFI] connect attempt %lu to %s", attempt, kStaSsid);
+
+    WiFi.disconnect();
+    delay(100);
+    WiFi.begin(kStaSsid, kStaPassword);
+
+    unsigned long startedAt = millis();
+    while (WiFi.status() != WL_CONNECTED && millis() - startedAt < kConnectAttemptTimeoutMs) {
+      delay(250);
+      Serial.print(".");
+    }
+
+    if (WiFi.status() == WL_CONNECTED) {
+      break;
+    }
+
+    Serial.print("\r\n");
+    Serial.printf("[WIFI] retrying after timeout, status=%d\r\n", static_cast<int>(WiFi.status()));
+    appendTelemetryf("[WIFI] retrying, status=%d", static_cast<int>(WiFi.status()));
+    delay(kRetryDelayMs);
+  }
+
+  logConnectedStationSummary();
+}
 
 static bool initCameraHardware()
 {
@@ -96,27 +188,61 @@ static bool initCameraHardware()
 
 void CameraWebServer_init()
 {
-  WiFi.persistent(false);
-  WiFi.useStaticBuffers(true);
-  WiFi.mode(WIFI_OFF);
-  delay(250);
-  WiFi.mode(WIFI_AP);
-  WiFi.setSleep(false);
-  bool ap_ok = WiFi.softAP(ssid);
-  Serial.print("\r\n");
-  Serial.printf("softAP status: %s\r\n", ap_ok ? "ok" : "error");
-  Serial.printf("softAP SSID: %s\r\n", ssid);
-  Serial.printf("softAP IP: %s\r\n", WiFi.softAPIP().toString().c_str());
-  Serial.printf("softAP mask: %s\r\n", WiFi.softAPSubnetMask().toString().c_str());
-  Serial.printf("softAP security: open\r\n");
-  Serial.print("\r\n");
-  Serial.print("AP Ready! control=http://");
-  Serial.print(WiFi.softAPIP());
-  Serial.print("/control stream=http://");
-  Serial.print(WiFi.softAPIP());
-  Serial.print(":81/stream telemetry=http://");
-  Serial.print(WiFi.softAPIP());
-  Serial.println(":82/telemetry");
+  connectToStation();
+}
+
+void CameraWebServer_announceDiscovery()
+{
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("[DISCOVERY] skipped, WiFi not connected");
+    appendTelemetryLine("[DISCOVERY] skipped, no WiFi");
+    return;
+  }
+
+  WiFiUDP udp;
+  if (!udp.begin(kDiscoverySourcePort)) {
+    Serial.printf("[DISCOVERY] failed to open UDP source port %u\r\n", kDiscoverySourcePort);
+    appendTelemetryLine("[DISCOVERY] UDP open failed");
+    return;
+  }
+
+  String ip = WiFi.localIP().toString();
+  IPAddress subnetBroadcast = broadcastAddressFor(WiFi.localIP(), WiFi.subnetMask());
+  const IPAddress globalBroadcast(255, 255, 255, 255);
+
+  char payload[192];
+  snprintf(
+    payload,
+    sizeof(payload),
+    "{\"id\":\"%s\",\"ip\":\"%s\",\"ports\":{\"http\":%u,\"stream\":%u,\"telemetry\":%u}}",
+    kRoverId,
+    ip.c_str(),
+    kControlPort,
+    kStreamPort,
+    kTelemetryPort
+  );
+
+  for (uint8_t burst = 0; burst < kAnnouncementBurstCount; burst++) {
+    udp.beginPacket(subnetBroadcast, kDiscoveryPort);
+    udp.print(payload);
+    udp.endPacket();
+
+    udp.beginPacket(globalBroadcast, kDiscoveryPort);
+    udp.print(payload);
+    udp.endPacket();
+
+    delay(kAnnouncementBurstDelayMs);
+  }
+
+  udp.stop();
+
+  Serial.printf(
+    "[DISCOVERY] announced rover ip=%s via %s:%u\r\n",
+    ip.c_str(),
+    subnetBroadcast.toString().c_str(),
+    kDiscoveryPort
+  );
+  appendTelemetryf("[DISCOVERY] announced ip=%s port=%u", ip.c_str(), kDiscoveryPort);
 }
 
 bool CameraWebServer_startServices()
